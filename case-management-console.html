@@ -1,0 +1,2043 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <title>東生華製藥 — 個案管理後台</title>
+  <link rel="icon" href="https://www.tshbiopharm.com/rwd1427/store/f1/shortcut.ico" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://scrm.oakmega.site/0/css/primeicons.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box;  }
+    [v-cloak] { display: none }
+    :root {
+      /* 東生華品牌青綠 rgb(71,204,200) = brand-400：按鈕與色塊用亮青綠＋白字，連結等文字用 brand-700 */
+      --brand-50:#EAF8F7; --brand-100:#D2F1F0; --brand-200:#A6E3E1; --brand-400:#47CCC8;
+      --brand-500:#1FA9A5; --brand-700:#0A6E6B;
+      --bg:#F4F6F8; --surface:#FFFFFF; --surface-2:#EEF2F5;
+      --border:#DDE3E9; --border-strong:#B8C4CE;
+      --text-primary:#1A2530; --text-secondary:#4A5C6A; --text-muted:#7A8F9E;
+      --green:#276B3C; --green-light:#E6F3EA;
+      --red:#B93028; --red-light:#FCECEA;
+      --amber:#B45309; --amber-light:#FFF4E5;
+      --docx:#1d4ed8; --docx-light:#dbeafe;
+      --red-border:#f0c0bb; --amber-border:#FDD08A;
+      /* 進度條、時間軸等非文字色塊用亮色 */
+      --status-active:#47CCC8; --status-done:#3BAA6A; --status-overdue:#F59E0B; --status-terminated:#E5484D;
+      --font:'Noto Sans TC',sans-serif;
+      /* 字級：12 輔助／標籤、14 內文、16 區塊標題、20 頁面標題 */
+      --fs-12:12px; --fs-14:14px; --fs-16:16px; --fs-20:20px;
+      --radius:8px; --radius-lg:12px;
+    }
+    body { font-variant-numeric:tabular-nums; font-family:var(--font); background:var(--bg); color:var(--text-primary); font-size:var(--fs-14); line-height:1.6; min-height:100vh; }
+    .app-shell { display:flex; height:100vh; overflow:hidden; }
+
+    /* Sidebar */
+    .sidebar { width:220px; flex-shrink:0; border-right:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; height:100vh; overflow-y:auto; }
+    .sidebar-logo { height:54px; flex-shrink:0; display:flex; align-items:center; padding:0 28px; background:var(--surface); }
+    .sidebar-logo img { display:block; height:40px; width:auto; max-width:100%; object-fit:contain; }
+    .sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid var(--border); }
+    .sidebar-account { display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:0 8px; }
+    .sidebar-account-info { flex:1; min-width:0; }
+    .sidebar-account-name { display:flex; align-items:center; gap:8px; font-size:var(--fs-14); font-weight:500; color:var(--text-primary); }
+    .sidebar-account-role.p-tag { padding:1px 6px; font-size:var(--fs-12); font-weight:500; line-height:1.5; }
+    .sidebar-account-email { font-size:var(--fs-12); color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Main */
+    .page-host { flex:1; overflow-y:auto; min-width:0; display:flex; flex-direction:column; }
+    .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 28px; height:54px; display:flex; align-items:center; gap:8px; position:sticky; top:0; z-index:10; flex-shrink:0; }
+    .topbar-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    .topbar .p-breadcrumb-item-link, .topbar .p-breadcrumb-item-label { color:var(--brand-700); }
+    .topbar .p-breadcrumb-item:first-child .p-breadcrumb-item-link, .topbar .p-breadcrumb-item:first-child .p-breadcrumb-item-label { color:var(--text-muted); }
+    .topbar .p-breadcrumb-item:last-child .p-breadcrumb-item-link, .topbar .p-breadcrumb-item:last-child .p-breadcrumb-item-label { color:var(--text-primary); font-weight:600; }
+    .topbar .p-breadcrumb-separator { color:var(--border-strong); }
+    .topbar .p-breadcrumb-separator svg { width:9px; height:9px; }
+    .content { padding:24px 28px 80px; flex:1; }
+    .page-header { margin-bottom:22px; }
+    .page-title { font-size:var(--fs-20); font-weight:600; line-height:1.4; margin-bottom:4px; }
+    .page-subtitle { font-size:var(--fs-14); color:var(--text-muted); }
+
+
+    /* Table */
+    .table-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+    .table-toolbar.p-toolbar { border:0; border-bottom:1px solid var(--border); border-radius:0; }
+    .table-summary { display:flex; justify-content:flex-end; padding:12px 20px; color:var(--text-muted); font-size:var(--fs-12); }
+    .table-toolbar .p-toolbar-start { display:flex; align-items:center; gap:10px; flex:1; flex-wrap:wrap; }
+    .count-label { font-size:var(--fs-12); color:var(--text-muted); margin-left:auto; white-space:nowrap; }
+
+
+
+    /* Chips */
+    .tags-row { display:flex; flex-wrap:wrap; gap:4px 16px; }
+    /* 表格與清單文字 */
+    .person-name { font-size:var(--fs-14); font-weight:500; }
+    .cell-text { font-size:var(--fs-14); }
+    .cell-text-secondary { font-size:var(--fs-14); color:var(--text-secondary); }
+    .cell-meta { font-size:var(--fs-12); color:var(--text-muted); white-space:nowrap; }
+    .cell-value { font-size:var(--fs-14); color:var(--text-secondary); white-space:nowrap; }
+    .case-id { font-size:var(--fs-12); color:var(--text-muted); white-space:nowrap; }
+    .case-identity { display:flex; align-items:center; gap:6px; }
+    .case-identity + .text-sm { margin-top:2px; }
+    .progress-label { font-size:var(--fs-12); color:var(--text-muted); }
+    .progress-count { font-size:var(--fs-14); font-weight:600; color:var(--brand-700); }
+    .person-link.p-button { padding:0; font-size:var(--fs-14); }
+    .field-label-row { display:flex; align-items:center; gap:8px; }
+    .info-row .field-label { margin-bottom:4px; }
+    .section-hint { font-size:var(--fs-12); color:var(--text-muted); }
+    .row-actions { display:flex; gap:8px; }
+    .content-narrow { max-width:860px; }
+    .empty-state-compact { padding:30px 0; }
+    /* 待上傳檔案 */
+    .pending-file { margin-bottom:10px; padding:14px 16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg); }
+    .pending-file-row { display:flex; align-items:center; gap:10px; }
+    .pending-file-info { flex:1; min-width:0; }
+    .pending-file-name { font-size:var(--fs-12); font-weight:500; }
+    .pending-file-meta { font-size:var(--fs-12); color:var(--text-muted); }
+    .file-empty { padding:14px 0; text-align:center; color:var(--text-muted); font-size:var(--fs-12); }
+    /* 對話框 */
+    .dialog-md { width:480px; max-width:calc(100vw - 32px); }
+    .dialog-sm { width:400px; max-width:calc(100vw - 32px); }
+    .dialog-form { display:flex; flex-direction:column; gap:16px; padding-top:4px; }
+    .dialog-body { padding-top:4px; }
+    .checkbox-label { font-size:var(--fs-14); color:var(--text-secondary); cursor:pointer; }
+    .n2-ext-row { display:flex; align-items:center; gap:7px; font-size:var(--fs-12); }
+    .n2-ext-label { color:var(--amber); cursor:pointer; }
+
+
+    /* Detail layout */
+    .detail-layout { display:grid; grid-template-columns:1fr 310px; gap:20px; align-items:start; }
+    .section-title { font-size:var(--fs-16); font-weight:600; line-height:1.4; }
+    .section-body { padding:20px; }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-field { display:flex; flex-direction:column; gap:5px; }
+    .form-field.full { grid-column:1/-1; }
+    .field-label { font-size:var(--fs-14); font-weight:400; color:var(--text-secondary); }
+    .field-value { font-size:var(--fs-14); font-weight:500; color:var(--text-primary); min-height:20px; }
+    .field-value.field-value-small { font-size:var(--fs-14); }
+
+    /* Progress nodes */
+    .node-label { font-size:var(--fs-14); font-weight:500; }
+    .node-desc  { font-size:var(--fs-12); color:var(--text-muted); margin-top:1px; }
+    .node-n2-ext { display:inline-flex; margin-top:6px; }
+    .node-date-display { font-size:var(--fs-12); color:var(--text-secondary); }
+
+    /* Files */
+    .file-item { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 10px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius); margin-top:8px; }
+    .file-type.p-tag { width:auto; min-width:0; height:auto; padding:3px 8px; font-size:var(--fs-12); font-weight:600; line-height:1.4; white-space:nowrap; flex-shrink:0; }
+    .file-heading { display:flex; align-items:center; gap:8px; min-width:0; }
+    .file-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--fs-12); font-weight:500; }
+    .file-meta { grid-column:1 / -1; display:flex; align-items:center; gap:8px; white-space:nowrap; font-size:var(--fs-12); color:var(--text-muted); }
+    .file-meta .p-tag { flex-shrink:0; white-space:nowrap; }
+    .file-type.file-icon-pdf  { background:var(--red-light); color:var(--red); }
+    .file-type.file-icon-txt  { background:var(--surface-2); color:var(--text-secondary); }
+    .file-type.file-icon-docx { background:var(--docx-light); color:var(--docx); }
+
+
+    /* User detail */
+    .user-detail-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+
+    /* Relation list */
+    .relation-list.section-body { padding:0; }
+    .rel-item { display:flex; align-items:center; justify-content:space-between; padding:11px 20px; border-bottom:1px solid var(--border); }
+    .rel-item:last-child { border-bottom:none; }
+    .rel-item[role="link"] { cursor:pointer; }
+    .rel-item[role="link"]:hover { background:#FAFBFC; }
+    .rel-item[role="link"]:focus-visible { outline:2px solid var(--brand-700); outline-offset:-2px; }
+    .rel-item-info { display:flex; align-items:center; gap:10px; }
+    .rel-item-name { font-size:var(--fs-14); font-weight:500; }
+    .rel-item-sub  { font-size:var(--fs-12); color:var(--text-muted); }
+
+    /* Buttons */
+    .empty-state { padding:40px 20px; text-align:center; color:var(--text-muted); font-size:var(--fs-14); }
+    .text-muted { color:var(--text-muted); }
+    .text-sm { font-size:var(--fs-12); }
+    .info-row { display:flex; flex-direction:column; gap:12px; }
+
+
+    /* Login page */
+    .login-page { min-height:100vh; background:var(--bg); display:flex; align-items:center; justify-content:center; padding:24px; }
+    .login-logo { margin-bottom:28px; }
+    .login-logo-image { display:block; height:64px; width:auto; max-width:100%; object-fit:contain; }
+    .login-title { font-size:var(--fs-20); font-weight:600; line-height:1.4; color:var(--brand-700); margin-bottom:4px; }
+    .login-title-solo { margin-bottom:28px; }
+    .login-field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+    .login-label { font-size:var(--fs-14); font-weight:400; color:var(--text-secondary); }
+    .otp-hint { font-size:var(--fs-12); color:var(--text-muted); margin-bottom:20px; line-height:1.5; }
+    .otp-hint strong { color:var(--brand-700); }
+    .otp-input { letter-spacing:0.2em; font-size:var(--fs-20); text-align:center; }
+    .login-demo-hint { margin-top:24px; padding-top:20px; border-top:1px solid var(--border); font-size:var(--fs-12); color:var(--text-muted); line-height:1.7; }
+    .login-demo-hint code { font-family:var(--font); background:var(--surface-2); padding:1px 5px; border-radius:3px; color:var(--text-secondary); }
+
+
+    /* 直客 checkbox */
+    .required-mark { margin-left:2px; color:var(--red); }
+    .direct-checkbox-row { display:flex; align-items:flex-start; gap:8px; }
+  
+    /* Application layout and the small visual differences from the Lara preset. */
+    h1, h2, h3, p { margin:0; }
+    body { margin:0; }
+    .p-component { font-family:var(--font); }
+    .p-button { white-space:nowrap; font-size:var(--fs-14); }
+    .p-button.p-button-sm { font-size:var(--p-button-sm-font-size, 12px); }
+    .p-button svg { flex-shrink:0; }
+    .sidebar-menu { width:100%; min-width:0; flex-shrink:0; border:0; }
+    .sidebar-menu .nav-item { display:flex; align-items:center; gap:10px; min-height:44px; padding:10px 12px; border-radius:7px; color:var(--text-secondary); text-decoration:none; }
+    .sidebar-menu .nav-item > i { color:var(--text-muted); }
+    .sidebar-menu .nav-item:hover { background:var(--bg); }
+    .sidebar-menu .nav-item.active { background:var(--brand-50); color:var(--brand-700); font-weight:600; }
+    .sidebar-menu .nav-item.active > i { color:var(--brand-700); }
+    .sidebar-logout.p-button { width:100%; justify-content:flex-start; padding-inline:8px; }
+    .sidebar-logout .p-button-label { flex:0 0 auto; }
+    .avatar-sm { width:30px; height:30px; flex-shrink:0; }
+    .user-avatar-lg { width:52px; height:52px; font-size:var(--fs-20); flex-shrink:0; }
+    .search-box { flex:1; max-width:280px; min-width:180px; }
+    .management-table { --p-datatable-row-hover-background:#FAFBFC; }
+    .management-table .p-datatable-tbody > tr { cursor:pointer; }
+    .personnel-table .p-datatable-thead > tr > th, .personnel-table .p-datatable-tbody > tr > td { white-space:nowrap; }
+    .status-tag { white-space:nowrap; }
+    .case-progress { margin-top:4px; }
+    .section-card { margin-bottom:16px; overflow:hidden; }
+    .section-card .p-panel-header { border-bottom:1px solid var(--border); }
+    .section-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; }
+    .section-title-group { display:flex; align-items:center; gap:8px; }
+    .section-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
+    .case-timeline .p-timeline-event-opposite { display:none; }
+    .case-timeline .p-timeline-event-content { padding:0 0 20px 12px; min-width:0; }
+    .node-content { display:grid; grid-template-columns:minmax(0,1fr) 150px 80px; gap:12px; align-items:start; }
+    .node-date-input { width:145px; }
+    .list-actions { display:flex; align-items:center; gap:16px; }
+    .user-tabs { flex:0 1 auto; min-width:0; max-width:100%; background:transparent; border-radius:0; --p-tabs-tab-background:transparent; --p-tabs-tab-hover-background:transparent; --p-tabs-tab-active-background:transparent; --p-tabs-tab-hover-color:var(--brand-700); }
+    .user-tabs .p-tablist, .user-tabs .p-tablist-content { background:transparent; border:0; border-radius:inherit; }
+    .user-tabs .p-tablist-tab-list { display:flex; gap:0; padding:0; border:0; background:transparent; }
+    .user-tabs .p-tab { flex:0 0 auto; min-height:36px; margin:0; padding:8px 12px; border:0; border-radius:0; background:transparent; color:var(--text-secondary); font-size:var(--fs-14); font-weight:400; line-height:20px; white-space:nowrap; box-shadow:none; transition:color .15s; }
+    /* PrimeVue injects its theme after this stylesheet; keep tab hover backgrounds transparent. */
+    .user-tabs .p-tab:hover, .user-tabs .p-tab:not(.p-disabled):hover { background:transparent !important; border-radius:0; box-shadow:none !important; }
+    .user-tabs .p-tab:first-child, .user-tabs .p-tab:last-child { border-radius:0; }
+    .user-tabs .p-tab:not([aria-selected="true"]):not(.p-disabled):hover { color:var(--brand-700) !important; }
+    .user-tabs .p-tab[aria-selected="true"] { background:transparent; border:0; color:var(--brand-700); font-weight:600; box-shadow:none; }
+    .user-tabs .p-tab[aria-selected="true"]:hover { background:transparent; }
+    .user-tabs .p-tab:focus-visible { outline:2px solid var(--brand-700); outline-offset:-2px; }
+    .user-tabs .p-tablist-active-bar { display:none; }
+    .login-card { width:100%; max-width:400px; min-height:600px; --p-card-body-padding:32px; --p-card-border-radius:16px; --p-card-shadow:0 4px 24px rgba(0,0,0,.08); }
+    @media (max-height:640px) { .login-page { align-items:flex-start; } }
+    @media (max-width:480px) { .login-card { --p-card-body-padding:24px; } }
+    .login-input { width:100%; }
+    .login-input .p-inputtext { width:100%; }
+    .login-input .p-password-toggle-mask-icon { cursor:pointer; }
+    .login-btn { margin-top:4px; }
+    .login-back { margin-top:14px; }
+    .terminated-banner, .overdue-banner, .pdf-pw-banner { margin-bottom:16px; }
+    .upload-hint { display:block; width:100%; padding:24px 18px; text-align:center; color:var(--text-muted); cursor:pointer; }
+    .upload-hint:hover { background:var(--brand-50); }
+    .upload-hint:focus-visible { outline:2px solid var(--brand-700); outline-offset:-2px; }
+    @media (max-width:1100px) {
+      .detail-layout { grid-template-columns:1fr; }
+      .content { padding:20px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!-- Login page -->
+  <div v-if="!loggedIn" class="login-page">
+    <p-card class="login-card">
+      <template #content>
+        <div class="login-logo">
+          <img class="login-logo-image" src="https://www.tshbiopharm.com/rwd1427/Store/OwnImage/logo.png" alt="東生華製藥 tshbiopharm">
+        </div>
+        <!-- Step 1: 帳號 + 使用者代號 -->
+        <template v-if="loginStep === 'credentials'">
+          <div class="login-title login-title-solo">後台管理系統</div>
+          <div class="login-field">
+            <label class="login-label" for="login-email">電子郵件</label>
+            <p-input-text id="login-email" class="login-input" type="email" v-model="loginEmail" placeholder="admin@tsh.com" @keyup.enter="submitCredentials" :invalid="!!loginError" fluid></p-input-text>
+          </div>
+          <div class="login-field">
+            <label class="login-label" for="login-password">使用者代號</label>
+            <p-password input-id="login-password" class="login-input" v-model="loginPassword" placeholder="••••••••" @keyup.enter="submitCredentials" :invalid="!!loginError" fluid :feedback="false" toggle-mask></p-password>
+          </div>
+          <p-button class="login-btn" @click="submitCredentials" type="button" fluid>登入</p-button>
+          <div class="login-demo-hint">
+            示範帳號：
+            <code>admin@tsh.com</code>
+            使用者代號：
+            <code>admin.li</code>
+            OTP：
+            <code>123456</code>
+          </div>
+        </template>
+        <!-- Step 2: OTP 驗證 -->
+        <template v-if="loginStep === 'otp'">
+          <div class="login-title">二階段驗證</div>
+          <div class="otp-hint">
+            驗證碼已發送至
+            <strong>{{ loginEmail }}</strong>
+            ，請於 5 分鐘內輸入。
+          </div>
+          <div class="login-field">
+            <label class="login-label" for="login-otp">OTP 驗證碼</label>
+            <p-input-text id="login-otp" class="login-input otp-input" type="text" inputmode="numeric" maxlength="6" v-model="loginOtp" placeholder="000000" @keyup.enter="submitOtp" :invalid="!!loginError" fluid></p-input-text>
+          </div>
+          <p-button class="login-btn" @click="submitOtp" type="button" fluid>驗證並登入</p-button>
+          <p-button class="login-back" @click="loginStep='credentials'; loginError=''; loginOtp=''" type="button" link fluid>← 返回重新輸入帳號</p-button>
+        </template>
+      </template>
+    </p-card>
+  </div>
+  <!-- Main app -->
+  <div v-if="loggedIn" class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <img src="https://www.tshbiopharm.com/rwd1427/Store/OwnImage/logo.png" alt="東生華製藥 tshbiopharm">
+      </div>
+      <p-menu :model="navigationItems" :dt="sidebarMenuTheme" class="sidebar-menu">
+        <template #item="{ item, props }">
+          <a v-bind="props.action" :class="['nav-item', { active: item.active }]" :aria-current="item.active ? 'page' : undefined">
+            <i :class="item.icon"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        </template>
+      </p-menu>
+      <div class="sidebar-footer">
+        <div class="sidebar-account">
+          <div class="sidebar-account-info">
+            <div class="sidebar-account-name">王崇霖 <p-tag class="sidebar-account-role" severity="info" value="管理員"></p-tag></div>
+            <div class="sidebar-account-email" :title="loginEmail || 'admin@tsh.com'">{{ loginEmail || 'admin@tsh.com' }}</div>
+          </div>
+        </div>
+        <p-button @click="logout" type="button" class="sidebar-logout" severity="secondary" :dt="sidebarLogoutTheme" size="small" icon="pi pi-sign-out" label="登出"></p-button>
+      </div>
+    </aside>
+    <main ref="pageHost" class="page-host">
+      <!-- ── 個案列表 ── -->
+      <template v-if="page === 'cases'">
+        <div class="topbar">
+          <p-breadcrumb :model="[{ label: '個案管理' }]"></p-breadcrumb>
+        </div>
+        <div class="content">
+          <div class="table-card">
+            <p-toolbar class="table-toolbar">
+              <template #start>
+              <p-icon-field class="search-box">
+                <p-input-icon class="pi pi-search"></p-input-icon>
+                <p-input-text v-model="search" placeholder="搜尋姓名、個案ID、醫師…" size="small" fluid></p-input-text>
+              </p-icon-field>
+              <p-select v-model="filterCancer" size="small" option-label="label" option-value="value" :options="cancerFilterOptions"></p-select>
+              <p-select v-model="filterStatus" size="small" option-label="label" option-value="value" :options="statusFilterOptions"></p-select>
+              <p-button type="button" label="搜尋" severity="secondary" outlined size="small"></p-button>
+              
+              </template>
+              <template #end>
+                <div class="list-actions">
+                  <p-button @click="openAddCase" type="button" label="新增個案" size="small"></p-button>
+                </div>
+              </template>
+            </p-toolbar>
+            <p-data-table :value="filteredCases" data-key="id" size="small" class="management-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openCaseRow" :row-class="caseRowClass">
+              <template #empty>找不到符合的個案</template>
+              <p-column header="個案" style="width:26%">
+                <template #body="{ data: c }">
+                  <div>
+                    <div class="case-identity">
+                      <span class="person-name">{{ c.name }}</span>
+                      <span class="case-id">{{ c.id }}</span>
+                    </div>
+                    <div class="text-sm text-muted">{{ c.hospital }}</div>
+                  </div>
+                </template>
+              </p-column>
+              <p-column header="癌症" style="width:8%">
+                <template #body="{ data: c }">
+                  <div class="cell-text-secondary">{{ c.cancer }}</div>
+                </template>
+              </p-column>
+              <p-column header="主治醫師" style="width:22%">
+                <template #body="{ data: c }">
+                  <div class="cell-text">{{ c.doctorIds.map(getDoctorName).join('、') || '—' }}</div>
+                </template>
+              </p-column>
+              <p-column header="進程" style="width:20%">
+                <template #body="{ data: c }">
+                  <div>
+                    <div class="progress-label">N{{ caseCurrentStep(c) }} · {{ nodeLabel(caseCurrentStep(c)) }}</div>
+                    <p-progress-bar class="case-progress" :value="caseCurrentStep(c)/5*100" :show-value="false" :dt="{ value: { background: statusColor(c.status) } }"></p-progress-bar>
+                  </div>
+                </template>
+              </p-column>
+              <p-column header="建立日期" style="width:14%;min-width:130px;white-space:nowrap">
+                <template #body="{ data: c }">
+                  <div class="cell-meta">{{ c.createdAt }}</div>
+                </template>
+              </p-column>
+              <p-column header="狀態" style="width:10%">
+                <template #body="{ data: c }">
+                  <div>
+                    <p-tag class="status-tag" rounded :severity="statusSeverity(c.status)">{{ statusLabel(c.status) }}</p-tag>
+                  </div>
+                </template>
+              </p-column>
+            </p-data-table>
+            <div class="table-summary">共 {{ filteredCases.length }} 筆</div>
+          </div>
+        </div>
+      </template>
+      <!-- ── 個案詳情 ── -->
+      <template v-if="page === 'case-detail' &amp;&amp; selectedCase">
+        <div class="topbar">
+          <p-breadcrumb :model="[{ label: '個案管理', command: () =&gt; navigate('cases') }, { label: selectedCase.name + '　' + (selectedCase.caseNumber || selectedCase.id) }]"></p-breadcrumb>
+        </div>
+        <div class="content">
+          <!-- 中止提示 -->
+          <p-message v-if="selectedCase.status==='terminated'" class="terminated-banner" severity="error">此個案已中止，進程不可繼續更新。如需恢復，請點「個案進程」區塊的「恢復個案」。</p-message>
+          <!-- 逾期提示 -->
+          <p-message v-if="selectedCase.status==='overdue'" class="overdue-banner" severity="warn">此個案已逾期（超過最新節點 3 天未更新），請儘速填入下一節點日期。</p-message>
+          <div class="detail-layout">
+            <!-- Left -->
+            <div>
+              <!-- 基本資訊 -->
+              <p-panel class="section-card">
+                <template #header>
+                  <div class="section-heading">
+                    <div class="section-title-group">
+                      <span class="section-title">基本資訊</span>
+                      <p-tag class="status-tag" rounded :severity="statusSeverity(selectedCase.status)">{{ statusLabel(selectedCase.status) }}</p-tag>
+                    </div>
+                    <div class="section-actions">
+                      <p-button v-if="selectedCase.status!=='terminated'" @click="enterEdit" type="button" severity="secondary" outlined size="small">編輯</p-button>
+                    </div>
+                  </div>
+                </template>
+                <div class="section-body">
+                  <div class="form-grid">
+                    <div class="form-field">
+                      <div class="field-label">姓名</div>
+                      <div class="field-value">{{ selectedCase.name }}</div>
+                    </div>
+                    <div class="form-field">
+                      <div class="field-label">生日</div>
+                      <div class="field-value field-value-small">{{ selectedCase.birthdate||'—' }}</div>
+                    </div>
+                    <div class="form-field">
+                      <div class="field-label">身分證字號</div>
+                      <div class="field-value field-value-small">{{ selectedCase.pid||'—' }}</div>
+                    </div>
+                    <div class="form-field">
+                      <div class="field-label">病歷號</div>
+                      <div class="field-value field-value-small">{{ selectedCase.chartNo||'—' }}</div>
+                    </div>
+                    <div class="form-field full">
+                      <div class="field-label">直客</div>
+                      <div>
+                        <p-tag v-if="selectedCase.isDirect" class="status-tag" rounded severity="info" icon="pi pi-check" value="直客"></p-tag>
+                        <span v-else class="field-value text-muted">否</span>
+                      </div>
+                    </div>
+                    <div class="form-field">
+                      <div class="field-label">癌症類型</div>
+                      <div class="field-value">{{ selectedCase.cancer }}</div>
+                    </div>
+                    <div class="form-field full">
+                      <div class="field-label">醫院</div>
+                      <div class="field-value">{{ selectedCase.hospital||'—' }}</div>
+                    </div>
+                    <div class="form-field full">
+                      <div class="field-label">主治醫師</div>
+                      <div class="tags-row">
+                        <p-button v-for="dId in selectedCase.doctorIds" :key="dId" :label="getDoctorName(dId)" link class="person-link" @click="navigate('user-detail',{user:getDoctor(dId),type:'doctor'})"></p-button>
+                        <span v-if="!selectedCase.doctorIds.length" class="text-muted">—</span>
+                      </div>
+                    </div>
+                    <!-- 業務（derived） -->
+                    <div class="form-field full">
+                      <div class="field-label field-label-row">
+                        負責業務
+                        <p-tag severity="secondary" value="由醫師關係推導"></p-tag>
+                      </div>
+                      <div class="tags-row">
+                        <p-button v-for="s in getCaseSales(selectedCase)" :key="s.id" :label="s.name" link class="person-link" @click="navigate('user-detail',{user:s,type:'sales'})"></p-button>
+                        <span v-if="!getCaseSales(selectedCase).length" class="text-muted text-sm">—</span>
+                      </div>
+                    </div>
+                    <!-- 助理（per-case visibility） -->
+                    <div class="form-field full">
+                      <div class="field-label field-label-row">
+                        可見助理
+                        <p-tag severity="secondary" value="逐一指定"></p-tag>
+                      </div>
+                      <div class="tags-row">
+                        <p-button v-for="aId in selectedCase.visibleAstIds" :key="aId" :label="getAssistantName(aId)" link class="person-link" @click="navigate('user-detail',{user:getAssistant(aId),type:'assistant'})"></p-button>
+                        <span v-if="!selectedCase.visibleAstIds.length" class="text-muted text-sm">未指定</span>
+                      </div>
+                    </div>
+                    <!-- 院所窗口（per-case visibility） -->
+                    <div class="form-field full">
+                      <div class="field-label field-label-row">
+                        可見院所窗口
+                        <p-tag severity="secondary" value="逐一指定"></p-tag>
+                      </div>
+                      <div class="tags-row">
+                        <p-button v-for="wId in selectedCase.visibleWinIds" :key="wId" :label="getWindowName(wId)" link class="person-link" @click="navigate('user-detail',{user:getWindow(wId),type:'window'})"></p-button>
+                        <span v-if="!selectedCase.visibleWinIds.length" class="text-muted text-sm">未指定</span>
+                      </div>
+                    </div>
+                    <div class="form-field full">
+                      <div class="field-label">備註</div>
+                      <div class="field-value text-muted">{{ selectedCase.notes||'—' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </p-panel>
+              <!-- 進程（管理員唯讀以外皆不可編輯，進度不可倒退） -->
+              <p-panel class="section-card">
+                <template #header>
+                  <div class="section-heading">
+                    <span class="section-title">個案進程</span>
+                    <div class="section-actions">
+                      <span class="section-hint">僅管理員可更新 · 不可倒退</span>
+                      <p-button v-if="selectedCase.status==='active'" @click="terminateCase" type="button" severity="danger" outlined size="small">中止個案</p-button>
+                      <p-button v-if="selectedCase.status==='terminated'" @click="restoreCase" type="button" severity="warn" outlined size="small">恢復個案</p-button>
+                      <p-button v-if="selectedCase.status!=='terminated'" @click="enterProgressEdit" type="button" severity="secondary" outlined size="small">編輯</p-button>
+                    </div>
+                  </div>
+                </template>
+                <div class="section-body">
+                  <p-timeline :value="nodeDefs" class="case-timeline">
+                    <template #marker="{ item: node }">
+                      <p-avatar shape="circle" :label="getNodeState(selectedCase,node.n)==='done' ? undefined : String(node.n)" :icon="getNodeState(selectedCase,node.n)==='done' ? 'pi pi-check' : undefined" :style="nodeMarkerStyle(getNodeState(selectedCase,node.n))"></p-avatar>
+                    </template>
+                    <template #content="{ item: node }">
+                      <div :key="node.n" class="node-content">
+                        <div>
+                          <div class="node-label">{{ node.label }}</div>
+                          <div class="node-desc">{{ node.desc }}</div>
+                          <!-- N2 延長逾期判定 -->
+                          <p-message v-if="node.n===2 &amp;&amp; selectedCase.n2Extended" class="node-n2-ext" severity="warn" size="small">⏱ 延長逾期判定：10 天</p-message>
+                        </div>
+                        <div>
+                          <div class="node-date-display">{{ selectedCase.progress['n'+node.n]||'—' }}</div>
+                        </div>
+                        <div>
+                          <p-tag class="status-tag" rounded :severity="getNodeState(selectedCase,node.n)==='done'?'success':getNodeState(selectedCase,node.n)==='active'?'info':'secondary'">{{ getNodeState(selectedCase,node.n)==='done'?'已完成':getNodeState(selectedCase,node.n)==='active'?'進行中':'待填寫' }}</p-tag>
+                        </div>
+                      </div>
+                    </template>
+                  </p-timeline>
+                </div>
+              </p-panel>
+            </div>
+            <!-- Right -->
+            <div>
+              <p-panel class="section-card">
+                <template #header>
+                  <div class="section-heading">
+                    <span class="section-title">個案資訊</span>
+                  </div>
+                </template>
+                <div class="section-body info-row">
+                  <div>
+                    <div class="field-label">個案編號</div>
+                    <div class="field-value">{{ selectedCase.caseNumber || selectedCase.id }}</div>
+                  </div>
+                  <div>
+                    <div class="field-label">建立日期</div>
+                    <div class="field-value field-value-small text-sm">{{ selectedCase.createdAt }}</div>
+                  </div>
+                  <div>
+                    <div class="field-label">建立者</div>
+                    <div class="field-value text-sm">{{ selectedCase.createdBy }}</div>
+                  </div>
+                  <div>
+                    <div class="field-label">完成進度</div>
+                    <div class="progress-count">{{ caseCurrentStep(selectedCase) }} / 5</div>
+                    <p-progress-bar class="case-progress" :value="caseCurrentStep(selectedCase)/5*100" :show-value="false" :dt="{ value: { background: statusColor(selectedCase.status) } }"></p-progress-bar>
+                  </div>
+                </div>
+              </p-panel>
+              <!-- 案件檔案（PDF / TXT / DOCX） -->
+              <p-panel class="section-card">
+                <template #header>
+                  <div class="section-heading">
+                    <span class="section-title">案件檔案</span>
+                  </div>
+                </template>
+                <div class="section-body">
+                  <!-- PDF 密碼通知條 -->
+                  <p-message v-if="pdfPasswordBanner" class="pdf-pw-banner" :severity="pdfPasswordBanner.fallback || !pdfPasswordBanner.direct ? 'warn' : 'info'" closable @close="pdfPasswordBanner=null">
+                    <span v-if="pdfPasswordBanner.fallback">
+                      此個案為非直客，但
+                      <strong>病歷號尚未填寫</strong>
+                      ，故改以
+                      <strong>身分證字號</strong>
+                      作為 PDF 加密密碼
+                      （
+                      {{ pdfPasswordBanner.pwValue }}
+                      ）。如需改用病歷號，請先填入再重新上傳。
+                    </span>
+                    <span v-else>
+                      此 PDF 已設定加密密碼：
+                      <strong>{{ pdfPasswordBanner.direct ? '身分證字號' : '病歷號' }}</strong>
+                      （
+                      {{ pdfPasswordBanner.pwValue }}
+                      ）
+                    </span>
+                  </p-message>
+                  <!-- Upload area (只在非中止狀態顯示) -->
+                  <template v-if="selectedCase.status !== 'terminated'">
+                    <template v-if="!pendingFile">
+                      <p-file-upload ref="caseUpload" mode="advanced" accept=".pdf,.txt,.docx" :multiple="false" :show-upload-button="false" :show-cancel-button="false" :pt="{ header:{ style:'display:none' }, content:{ style:'padding:0' } }" custom-upload @select="onPrimeFileSelect" invalid-file-type-message="僅支援 PDF、TXT、DOCX 檔案">
+                        <template #header></template>
+                        <template #empty>
+                          <div class="upload-hint" role="button" tabindex="0" @click="caseUpload.choose()" @keydown.enter.prevent="caseUpload.choose()" @keydown.space.prevent="caseUpload.choose()">
+                            <div>點擊選擇或拖曳上傳</div>
+                            <small>支援 PDF · TXT · DOCX（伺服器端加密保存）</small>
+                          </div>
+                        </template>
+                      </p-file-upload>
+                    </template>
+                    <!-- PDF / TXT / DOCX: 直接上傳確認 -->
+                    <template v-else-if="pendingFile">
+                      <div class="pending-file">
+                        <div class="pending-file-row">
+                          <p-tag class="file-type" :class="'file-icon-'+pendingFile.ftype" :value="pendingFile.ftype.toUpperCase()"></p-tag>
+                          <div class="pending-file-info">
+                            <div class="pending-file-name">{{ pendingFile.name }}</div>
+                            <div class="pending-file-meta">{{ pendingFile.size }} · 伺服器端加密保存</div>
+                          </div>
+                          <p-button @click="cancelFile" type="button" severity="secondary" outlined size="small">取消</p-button>
+                          <p-button @click="confirmFile" type="button" size="small">確認上傳</p-button>
+                        </div>
+                      </div>
+                    </template>
+                  </template>
+                  <!-- 已上傳的檔案列表 -->
+                  <div v-if="!selectedCase.files.length &amp;&amp; !pendingFile" class="file-empty">尚無附件</div>
+                  <div v-for="f in selectedCase.files" :key="f.id" class="file-item">
+                    <div class="file-heading">
+                      <p-tag class="file-type" :class="'file-icon-'+f.type" :value="f.type.toUpperCase()"></p-tag>
+                      <span class="file-name" :title="f.name">{{ f.name }}</span>
+                    </div>
+                    <p-button @click.stop="removeFile(f.id)" type="button" severity="danger" text size="small">移除</p-button>
+                    <div class="file-meta">
+                      <span>{{ f.size }} · {{ f.uploadedAt }}</span>
+                      <p-tag v-if="f.encrypted" severity="success" icon="pi pi-lock" value="已加密"></p-tag>
+                    </div>
+                  </div>
+                </div>
+              </p-panel>
+            </div>
+          </div>
+        </div>
+      </template>
+      <!-- ── 人員列表 ── -->
+      <template v-if="page === 'users'">
+        <div class="topbar">
+          <p-breadcrumb :model="[{ label: '人員管理' }, { label: { sales:'業務', doctors:'醫師', assistants:'助理', windows:'院所窗口', admins:'管理員' }[userTab] }]"></p-breadcrumb>
+        </div>
+        <div class="content">
+          <div class="table-card">
+            <p-toolbar class="table-toolbar">
+              <template #start>
+            <p-tabs v-model:value="userTab" class="user-tabs">
+              <p-tab-list>
+                <p-tab value="sales">業務</p-tab>
+                <p-tab value="doctors">醫師</p-tab>
+                <p-tab value="assistants">助理</p-tab>
+                <p-tab value="windows">院所窗口</p-tab>
+                <p-tab value="admins">管理員</p-tab>
+              </p-tab-list>
+            </p-tabs>
+              </template>
+              <template #end>
+            <p-button @click="openAddUser" type="button" label="新增使用者" size="small"></p-button>
+              </template>
+            </p-toolbar>
+          <!-- 業務 -->
+          <template v-if="userTab==='sales'">
+            <p-data-table :value="salesList" data-key="id" size="small" class="management-table personnel-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openUserRow($event, 'sales')">
+              <template #empty>尚無業務資料</template>
+              <p-column header="姓名" style="width:22%">
+                <template #body="{ data: u }">
+                  <span class="person-name">{{ u.name }}</span>
+                </template>
+              </p-column>
+              <p-column header="轄區" style="width:16%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ u.region }}</span>
+                </template>
+              </p-column>
+              <p-column header="Email" style="width:25%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.email }}</div>
+                </template>
+              </p-column>
+              <p-column header="電話" style="width:17%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.phone }}</div>
+                </template>
+              </p-column>
+              <p-column header="管理醫師數" style="width:12%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ validDoctorIds(u.doctorIds).length }} 位醫師</span>
+                </template>
+              </p-column>
+            </p-data-table>
+          </template>
+          <!-- 醫師 -->
+          <template v-if="userTab==='doctors'">
+            <p-data-table :value="doctorList" data-key="id" size="small" class="management-table personnel-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openUserRow($event, 'doctor')">
+              <template #empty>尚無醫師資料</template>
+              <p-column header="姓名" style="width:26%">
+                <template #body="{ data: u }">
+                  <span class="person-name">{{ u.name }}</span>
+                </template>
+              </p-column>
+              <p-column header="醫院" style="width:36%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.hospital }}</div>
+                </template>
+              </p-column>
+              <p-column header="助理數" style="width:14%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ validAssistantIds(u.assistantIds).length }} 位</span>
+                </template>
+              </p-column>
+              <p-column header="個案數" style="width:14%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ getDoctorCases(u.id).length }} 筆</span>
+                </template>
+              </p-column>
+            </p-data-table>
+          </template>
+          <!-- 助理 -->
+          <template v-if="userTab==='assistants'">
+            <p-data-table :value="assistantList" data-key="id" size="small" class="management-table personnel-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openUserRow($event, 'assistant')">
+              <template #empty>尚無助理資料</template>
+              <p-column header="姓名" style="width:24%">
+                <template #body="{ data: u }">
+                  <span class="person-name">{{ u.name }}</span>
+                </template>
+              </p-column>
+              <p-column header="醫院" style="width:32%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.hospital }}</div>
+                </template>
+              </p-column>
+              <p-column header="對應醫師" style="width:22%">
+                <template #body="{ data: u }">
+                  <div class="cell-text">{{ getDoctor(u.doctorId) ? getDoctorName(u.doctorId) : '尚未分配醫師' }}</div>
+                </template>
+              </p-column>
+              <p-column header="可見個案" style="width:12%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ getAssistantVisibleCases(u.id).length }} 筆</span>
+                </template>
+              </p-column>
+            </p-data-table>
+          </template>
+          <!-- 院所窗口 -->
+          <template v-if="userTab==='windows'">
+            <p-data-table :value="windowList" data-key="id" size="small" class="management-table personnel-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openUserRow($event, 'window')">
+              <template #empty>尚無院所窗口資料</template>
+              <p-column header="姓名" style="width:24%">
+                <template #body="{ data: u }">
+                  <span class="person-name">{{ u.name }}</span>
+                </template>
+              </p-column>
+              <p-column header="醫院" style="width:32%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.hospital }}</div>
+                </template>
+              </p-column>
+              <p-column header="對應醫師" style="width:22%">
+                <template #body="{ data: u }">
+                  <div class="cell-text">{{ getDoctor(u.doctorId) ? getDoctorName(u.doctorId) : '尚未分配醫師' }}</div>
+                </template>
+              </p-column>
+              <p-column header="可見個案" style="width:12%">
+                <template #body="{ data: u }">
+                  <span class="cell-value">{{ getWindowVisibleCases(u.id).length }} 筆</span>
+                </template>
+              </p-column>
+            </p-data-table>
+          </template>
+          <!-- 管理員 -->
+          <template v-if="userTab==='admins'">
+            <p-data-table :value="adminList" data-key="id" size="small" class="management-table personnel-table" :table-style="{ minWidth: '1000px' }" row-hover @row-click="openUserRow($event, 'admin')">
+              <template #empty>尚無管理員資料</template>
+              <p-column header="姓名" style="width:26%">
+                <template #body="{ data: u }">
+                  <span class="person-name">{{ u.name }}</span>
+                </template>
+              </p-column>
+              <p-column header="Email" style="width:36%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.email }}</div>
+                </template>
+              </p-column>
+              <p-column header="電話" style="width:28%">
+                <template #body="{ data: u }">
+                  <div class="text-muted text-sm">{{ u.phone }}</div>
+                </template>
+              </p-column>
+            </p-data-table>
+          </template>
+          </div>
+        </div>
+      </template>
+      <!-- ── 人員詳情 ── -->
+      <template v-if="page === 'user-detail' &amp;&amp; userDetail">
+        <!-- 業務詳情 -->
+        <template v-if="userDetail.type === 'sales'">
+          <div class="topbar">
+            <p-breadcrumb :model="[{ label: '人員管理' }, { label: '業務', command: () =&gt; navigate('users','sales') }, { label: userDetail.user.name }]"></p-breadcrumb>
+          </div>
+          <div class="content content-narrow">
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">基本資訊</span>
+                  <div class="user-detail-actions">
+                    <p-button @click="enterUserEdit" type="button" severity="secondary" outlined size="small">編輯資料</p-button>
+                  </div>
+                </div>
+              </template>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <div class="field-label">姓名</div>
+                    <div class="field-value">{{ userDetail.user.name }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">電話</div>
+                    <div class="field-value">{{ userDetail.user.phone||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">Email（OTP 用）</div>
+                    <div class="field-value">{{ userDetail.user.email||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">轄區</div>
+                    <div class="field-value">{{ userDetail.user.region||'—' }}</div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">管理醫師（{{ validDoctorIds(userDetail.user.doctorIds).length }} 位）</span>
+                  <p-button @click="openLinkDoctor" type="button" size="small">加入醫師</p-button>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!validDoctorIds(userDetail.user.doctorIds).length" class="empty-state empty-state-compact">尚未分配醫師</div>
+                <div v-for="dId in validDoctorIds(userDetail.user.doctorIds)" :key="dId" class="rel-item" role="link" tabindex="0" @click="navigate('user-detail',{user:getDoctor(dId),type:'doctor'})" @keydown.enter.self.prevent="navigate('user-detail',{user:getDoctor(dId),type:'doctor'})">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="rel-item-name">{{ getDoctorName(dId) }}</div>
+                      <div class="rel-item-sub">{{ getDoctorHospital(dId) }}</div>
+                    </div>
+                  </div>
+                  <div class="row-actions">
+                    <p-button @click.stop="unlinkDoctorFromSales(dId)" type="button" severity="danger" text size="small">移除</p-button>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">可見個案（{{ getSalesCases(userDetail.user.id).length }} 筆）</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getSalesCases(userDetail.user.id).length" class="empty-state empty-state-compact">目前沒有個案</div>
+                <div v-for="c in getSalesCases(userDetail.user.id)" :key="c.id" class="rel-item" role="link" tabindex="0" @click="navigate('case-detail',c)" @keydown.enter.self.prevent="navigate('case-detail',c)">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="case-identity">
+                        <span class="rel-item-name">{{ c.name }}</span>
+                        <span class="case-id">{{ c.id }}</span>
+                      </div>
+                      <div class="rel-item-sub">{{ c.cancer }} · N{{ caseCurrentStep(c) }}</div>
+                    </div>
+                  </div>
+                  <p-tag class="status-tag" rounded :severity="statusSeverity(c.status)">{{ statusLabel(c.status) }}</p-tag>
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </template>
+        <!-- 醫師詳情 -->
+        <template v-if="userDetail.type === 'doctor'">
+          <div class="topbar">
+            <p-breadcrumb :model="[{ label: '人員管理' }, { label: '醫師', command: () =&gt; navigate('users','doctors') }, { label: userDetail.user.name }]"></p-breadcrumb>
+          </div>
+          <div class="content content-narrow">
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">基本資訊</span>
+                  <div class="user-detail-actions">
+                    <p-button @click="enterUserEdit" type="button" severity="secondary" outlined size="small">編輯資料</p-button>
+                  </div>
+                </div>
+              </template>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <div class="field-label">姓名</div>
+                    <div class="field-value">{{ userDetail.user.name }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">電話</div>
+                    <div class="field-value">{{ userDetail.user.phone||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">Email（OTP 用）</div>
+                    <div class="field-value">{{ userDetail.user.email||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">醫院</div>
+                    <div class="field-value">{{ userDetail.user.hospital||'—' }}</div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">助理（{{ validAssistantIds(userDetail.user.assistantIds).length }} 位）</span>
+                  <p-button @click="openLinkAssistant" type="button" size="small">加入助理</p-button>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!validAssistantIds(userDetail.user.assistantIds).length" class="empty-state empty-state-compact">尚未分配助理</div>
+                <div v-for="aId in validAssistantIds(userDetail.user.assistantIds)" :key="aId" class="rel-item" role="link" tabindex="0" @click="navigate('user-detail',{user:getAssistant(aId),type:'assistant'})" @keydown.enter.self.prevent="navigate('user-detail',{user:getAssistant(aId),type:'assistant'})">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="rel-item-name">{{ getAssistantName(aId) }}</div>
+                      <div class="rel-item-sub">{{ getAssistantHospital(aId) }}</div>
+                    </div>
+                  </div>
+                  <div class="row-actions">
+                    <p-button @click.stop="unlinkAssistantFromDoctor(aId)" type="button" severity="danger" text size="small">移除</p-button>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">負責個案（{{ getDoctorCases(userDetail.user.id).length }} 筆）</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getDoctorCases(userDetail.user.id).length" class="empty-state empty-state-compact">目前沒有個案</div>
+                <div v-for="c in getDoctorCases(userDetail.user.id)" :key="c.id" class="rel-item" role="link" tabindex="0" @click="navigate('case-detail',c)" @keydown.enter.self.prevent="navigate('case-detail',c)">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="case-identity">
+                        <span class="rel-item-name">{{ c.name }}</span>
+                        <span class="case-id">{{ c.id }}</span>
+                      </div>
+                      <div class="rel-item-sub">{{ c.cancer }} · N{{ caseCurrentStep(c) }}</div>
+                    </div>
+                  </div>
+                  <p-tag class="status-tag" rounded :severity="statusSeverity(c.status)">{{ statusLabel(c.status) }}</p-tag>
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </template>
+        <!-- 助理詳情 -->
+        <template v-if="userDetail.type === 'assistant'">
+          <div class="topbar">
+            <p-breadcrumb :model="[{ label: '人員管理' }, { label: '助理', command: () =&gt; navigate('users','assistants') }, { label: userDetail.user.name }]"></p-breadcrumb>
+          </div>
+          <div class="content content-narrow">
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">基本資訊</span>
+                  <div class="user-detail-actions">
+                    <p-button @click="enterUserEdit" type="button" severity="secondary" outlined size="small">編輯資料</p-button>
+                  </div>
+                </div>
+              </template>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <div class="field-label">姓名</div>
+                    <div class="field-value">{{ userDetail.user.name }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">電話</div>
+                    <div class="field-value">{{ userDetail.user.phone||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">Email（OTP 用）</div>
+                    <div class="field-value">{{ userDetail.user.email||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">醫院</div>
+                    <div class="field-value">{{ userDetail.user.hospital||'—' }}</div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">對應醫師</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getDoctor(userDetail.user.doctorId)" class="empty-state empty-state-compact">尚未分配醫師</div>
+                <div v-else class="rel-item" role="link" tabindex="0" @click="navigate('user-detail',{user:getDoctor(userDetail.user.doctorId),type:'doctor'})" @keydown.enter.self.prevent="navigate('user-detail',{user:getDoctor(userDetail.user.doctorId),type:'doctor'})">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="rel-item-name">{{ getDoctorName(userDetail.user.doctorId) }}</div>
+                      <div class="rel-item-sub">{{ getDoctorHospital(userDetail.user.doctorId) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">可見個案（{{ getAssistantVisibleCases(userDetail.user.id).length }} 筆，依個案指定）</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getAssistantVisibleCases(userDetail.user.id).length" class="empty-state empty-state-compact">目前尚無被指定的個案</div>
+                <div v-for="c in getAssistantVisibleCases(userDetail.user.id)" :key="c.id" class="rel-item" role="link" tabindex="0" @click="navigate('case-detail',c)" @keydown.enter.self.prevent="navigate('case-detail',c)">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="case-identity">
+                        <span class="rel-item-name">{{ c.name }}</span>
+                        <span class="case-id">{{ c.id }}</span>
+                      </div>
+                      <div class="rel-item-sub">{{ c.cancer }} · N{{ caseCurrentStep(c) }}</div>
+                    </div>
+                  </div>
+                  <p-tag class="status-tag" rounded :severity="statusSeverity(c.status)">{{ statusLabel(c.status) }}</p-tag>
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </template>
+        <!-- 院所窗口詳情 -->
+        <template v-if="userDetail.type === 'window'">
+          <div class="topbar">
+            <p-breadcrumb :model="[{ label: '人員管理' }, { label: '院所窗口', command: () =&gt; navigate('users','windows') }, { label: userDetail.user.name }]"></p-breadcrumb>
+          </div>
+          <div class="content content-narrow">
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">基本資訊</span>
+                  <div class="user-detail-actions">
+                    <p-button @click="enterUserEdit" type="button" severity="secondary" outlined size="small">編輯資料</p-button>
+                  </div>
+                </div>
+              </template>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <div class="field-label">姓名</div>
+                    <div class="field-value">{{ userDetail.user.name }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">電話</div>
+                    <div class="field-value">{{ userDetail.user.phone||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">Email（OTP 用）</div>
+                    <div class="field-value">{{ userDetail.user.email||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">醫院</div>
+                    <div class="field-value">{{ userDetail.user.hospital||'—' }}</div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">對應醫師</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getDoctor(userDetail.user.doctorId)" class="empty-state empty-state-compact">尚未分配醫師</div>
+                <div v-else class="rel-item" role="link" tabindex="0" @click="navigate('user-detail',{user:getDoctor(userDetail.user.doctorId),type:'doctor'})" @keydown.enter.self.prevent="navigate('user-detail',{user:getDoctor(userDetail.user.doctorId),type:'doctor'})">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="rel-item-name">{{ getDoctorName(userDetail.user.doctorId) }}</div>
+                      <div class="rel-item-sub">{{ getDoctorHospital(userDetail.user.doctorId) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">可見個案（{{ getWindowVisibleCases(userDetail.user.id).length }} 筆，依個案指定）</span>
+                </div>
+              </template>
+              <div class="section-body relation-list">
+                <div v-if="!getWindowVisibleCases(userDetail.user.id).length" class="empty-state empty-state-compact">目前尚無被指定的個案</div>
+                <div v-for="c in getWindowVisibleCases(userDetail.user.id)" :key="c.id" class="rel-item" role="link" tabindex="0" @click="navigate('case-detail',c)" @keydown.enter.self.prevent="navigate('case-detail',c)">
+                  <div class="rel-item-info">
+                    <div>
+                      <div class="case-identity">
+                        <span class="rel-item-name">{{ c.name }}</span>
+                        <span class="case-id">{{ c.id }}</span>
+                      </div>
+                      <div class="rel-item-sub">{{ c.cancer }} · N{{ caseCurrentStep(c) }}</div>
+                    </div>
+                  </div>
+                  <p-tag class="status-tag" rounded :severity="statusSeverity(c.status)">{{ statusLabel(c.status) }}</p-tag>
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </template>
+        <!-- 管理員詳情 -->
+        <template v-if="userDetail.type === 'admin'">
+          <div class="topbar">
+            <p-breadcrumb :model="[{ label: '人員管理' }, { label: '管理員', command: () =&gt; navigate('users','admins') }, { label: userDetail.user.name }]"></p-breadcrumb>
+          </div>
+          <div class="content content-narrow">
+            <p-panel class="section-card">
+              <template #header>
+                <div class="section-heading">
+                  <span class="section-title">基本資訊</span>
+                  <div class="user-detail-actions">
+                    <p-button @click="enterUserEdit" type="button" severity="secondary" outlined size="small">編輯資料</p-button>
+                  </div>
+                </div>
+              </template>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="form-field">
+                    <div class="field-label">姓名</div>
+                    <div class="field-value">{{ userDetail.user.name }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">電話</div>
+                    <div class="field-value">{{ userDetail.user.phone||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">Email（OTP 用）</div>
+                    <div class="field-value">{{ userDetail.user.email||'—' }}</div>
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label">使用者代號（登入用）</div>
+                    <div class="field-value field-value-small">{{ userDetail.user.userCode||'—' }}</div>
+                  </div>
+                </div>
+              </div>
+            </p-panel>
+          </div>
+        </template>
+      </template>
+    </main>
+  </div>
+  <!-- Edit Case Information Dialog -->
+  <p-dialog v-model:visible="editMode" header="編輯基本資訊" modal class="dialog-md" :draggable="false">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label class="field-label">姓名</label>
+        <p-input-text v-model="editForm.name" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">生日</label>
+        <p-date-picker v-model="editForm.birthdate" placeholder="YYYY-MM-DD" fluid date-format="yy-mm-dd" update-model-type="string" show-icon :manual-input="false"></p-date-picker>
+      </div>
+      <div class="form-field">
+        <label class="field-label">身分證字號</label>
+        <p-input-text v-model="editForm.pid" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">病歷號</label>
+        <p-input-text v-model="editForm.chartNo" placeholder="例：MR-0042" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">直客</label>
+        <div class="direct-checkbox-row">
+          <p-checkbox v-model="editForm.isDirect" binary input-id="editDirect"></p-checkbox>
+          <label for="editDirect" class="checkbox-label">直客（PDF 使用身分證字號加密；否則使用病歷號）</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="field-label">癌症類型</label>
+        <p-select v-model="editForm.cancer" :options="cancerTypes" fluid></p-select>
+      </div>
+      <div class="form-field">
+        <label class="field-label">醫院</label>
+        <p-input-text v-model="editForm.hospital" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">主治醫師</label>
+        <p-multiselect v-model="editForm.doctorIds" :options="doctorOptions" option-label="label" option-value="value" placeholder="請選擇醫師" fluid display="chip" filter filter-placeholder="搜尋醫師姓名或醫院"></p-multiselect>
+      </div>
+      <div class="form-field">
+        <label class="field-label">負責業務（由醫師關係推導）</label>
+        <div class="tags-row">
+          <span v-if="getCaseSales(editForm).length" class="cell-text">{{ getCaseSales(editForm).map(sales => sales.name).join('、') }}</span>
+          <span v-else class="text-muted text-sm">未分配</span>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="field-label">可見助理</label>
+        <p-multiselect v-model="editForm.visibleAstIds" :options="assistantOptions" option-label="label" option-value="value" placeholder="選擇可見此個案的助理" fluid display="chip"></p-multiselect>
+      </div>
+      <div class="form-field">
+        <label class="field-label">可見院所窗口</label>
+        <p-multiselect v-model="editForm.visibleWinIds" :options="windowOptions" option-label="label" option-value="value" placeholder="選擇可見此個案的院所窗口" fluid display="chip"></p-multiselect>
+      </div>
+      <div class="form-field">
+        <label class="field-label">備註</label>
+        <p-textarea v-model="editForm.notes" :rows="2" fluid auto-resize></p-textarea>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="cancelEdit" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="saveEdit" type="button" size="small">儲存</p-button>
+    </template>
+  </p-dialog>
+  <!-- Edit Case Progress Dialog -->
+  <p-dialog v-model:visible="showProgressDialog" header="編輯個案進程" modal class="dialog-md" :draggable="false">
+    <div class="dialog-form">
+      <div v-for="node in nodeDefs" :key="node.n" class="form-field">
+        <label class="field-label">{{ node.label }}</label>
+        <div class="node-desc">{{ node.desc }}</div>
+        <p-date-picker v-model="progressForm.progress['n'+node.n]" :min-date="parseDate(progressForm.progress['n'+(node.n-1)] || '')" date-format="yy-mm-dd" update-model-type="string" :manual-input="false" show-icon fluid></p-date-picker>
+        <div v-if="node.n===2" class="n2-ext-row">
+          <p-checkbox v-model="progressForm.n2Extended" binary input-id="n2ext"></p-checkbox>
+          <label for="n2ext" class="n2-ext-label">N2 延長逾期判定至 <strong>10 天</strong>（預設 3 天）</label>
+        </div>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="showProgressDialog=false" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="saveProgressEdit" type="button" size="small">儲存</p-button>
+    </template>
+  </p-dialog>
+  <!-- Add Case Dialog -->
+  <p-dialog v-model:visible="showCaseDialog" header="新增個案" modal class="dialog-md" :draggable="false">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label class="field-label">個案編號<span class="required-mark">*</span></label>
+        <p-input-text v-model="caseForm.caseNumber" placeholder="例：TSH-2026-0043" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">姓名<span class="required-mark">*</span></label>
+        <p-input-text v-model="caseForm.name" placeholder="請輸入姓名" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">生日</label>
+        <p-date-picker v-model="caseForm.birthdate" placeholder="YYYY-MM-DD" fluid date-format="yy-mm-dd" update-model-type="string" show-icon :manual-input="false"></p-date-picker>
+      </div>
+      <div class="form-field">
+        <label class="field-label">身分證字號</label>
+        <p-input-text v-model="caseForm.pid" placeholder="A123456789" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">病歷號</label>
+        <p-input-text v-model="caseForm.chartNo" placeholder="例：MR-0043" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">癌症類型<span class="required-mark">*</span></label>
+        <p-select v-model="caseForm.cancer" :options="cancerTypes" placeholder="請選擇" fluid></p-select>
+      </div>
+      <div class="form-field">
+        <label class="field-label">直客</label>
+        <div class="direct-checkbox-row">
+          <p-checkbox v-model="caseForm.isDirect" binary input-id="createDirect"></p-checkbox>
+          <label for="createDirect" class="checkbox-label">此個案為直客（PDF 將使用身分證字號加密；否則使用病歷號）</label>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="field-label">醫院</label>
+        <p-input-text v-model="caseForm.hospital" placeholder="例：台大醫院" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">主治醫師<span class="required-mark">*</span></label>
+        <p-multiselect v-model="caseForm.doctorIds" :options="doctorOptions" option-label="label" option-value="value" placeholder="請選擇醫師" fluid display="chip" filter filter-placeholder="搜尋醫師姓名或醫院"></p-multiselect>
+      </div>
+      <div class="form-field">
+        <label class="field-label">備註</label>
+        <p-textarea v-model="caseForm.notes" :rows="3" placeholder="備註（選填）" fluid auto-resize></p-textarea>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="showCaseDialog=false" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="submitCreate" type="button" size="small">建立個案</p-button>
+    </template>
+  </p-dialog>
+  <!-- Shared Edit User Dialog -->
+  <p-dialog v-model:visible="editUserMode" :header="'編輯' + ({ sales:'業務', doctor:'醫師', assistant:'助理', window:'院所窗口', admin:'管理員' }[userDetail?.type] || '使用者')" modal class="dialog-md" :draggable="false" @hide="cancelUserEdit">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label class="field-label">姓名</label>
+        <p-input-text v-model="editUserForm.name" placeholder="請輸入姓名" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">電話</label>
+        <p-input-text v-model="editUserForm.phone" placeholder="0912-345-678" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">Email（OTP 用）</label>
+        <p-input-text v-model="editUserForm.email" placeholder="example@tsh.com" fluid></p-input-text>
+      </div>
+      <div v-if="userDetail?.type === 'sales'" class="form-field">
+        <label class="field-label">轄區</label>
+        <p-input-text v-model="editUserForm.region" placeholder="例：台北院區" fluid></p-input-text>
+      </div>
+      <div v-else-if="['doctor','assistant','window'].includes(userDetail?.type)" class="form-field">
+        <label class="field-label">醫院</label>
+        <p-input-text v-model="editUserForm.hospital" placeholder="例：台大醫院" fluid></p-input-text>
+      </div>
+      <div v-else-if="userDetail?.type === 'admin'" class="form-field">
+        <label class="field-label">使用者代號（登入用）</label>
+        <p-input-text v-model="editUserForm.userCode" placeholder="英文、數字或底線" fluid></p-input-text>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="cancelUserEdit" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="saveUserEdit" type="button" size="small">儲存</p-button>
+    </template>
+  </p-dialog>
+  <!-- Add User Dialog -->
+  <p-dialog v-model:visible="showUserDialog" header="新增使用者" modal class="dialog-md" :draggable="false">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label class="field-label">角色<span class="required-mark">*</span></label>
+        <p-select v-model="userForm.role" :options="[{label:'業務',value:'sales'},{label:'醫師',value:'doctors'},{label:'助理',value:'assistants'},{label:'院所窗口',value:'windows'},{label:'管理員',value:'admins'}]" option-label="label" option-value="value" placeholder="請選擇角色" fluid></p-select>
+      </div>
+      <div class="form-field">
+        <label class="field-label">姓名<span class="required-mark">*</span></label>
+        <p-input-text v-model="userForm.name" placeholder="請輸入姓名" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">Email（登入 OTP 用）<span class="required-mark">*</span></label>
+        <p-input-text v-model="userForm.email" placeholder="example@tsh.com" fluid></p-input-text>
+      </div>
+      <div class="form-field">
+        <label class="field-label">電話</label>
+        <p-input-text v-model="userForm.phone" placeholder="0912-345-678" fluid></p-input-text>
+      </div>
+      <div class="form-field" v-if="userForm.role &amp;&amp; userForm.role !== 'sales' &amp;&amp; userForm.role !== 'admins'">
+        <label class="field-label">醫院</label>
+        <p-input-text v-model="userForm.hospital" placeholder="例：台大醫院" fluid></p-input-text>
+      </div>
+      <div class="form-field" v-if="userForm.role === 'assistants' || userForm.role === 'windows'">
+        <label class="field-label">對應醫師</label>
+        <p-select v-model="userForm.doctorId" :options="doctorOptions" option-label="label" option-value="value" placeholder="請選擇醫師" fluid></p-select>
+      </div>
+      <div class="form-field" v-if="userForm.role === 'sales'">
+        <label class="field-label">轄區</label>
+        <p-input-text v-model="userForm.region" placeholder="例：台北院區" fluid></p-input-text>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="showUserDialog=false" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="submitAddUser" type="button" size="small">新增</p-button>
+    </template>
+  </p-dialog>
+  <!-- Link Doctor to Sales -->
+  <p-dialog v-model:visible="showLinkDoctorDialog" header="加入醫師（受轄區限制）" modal class="dialog-sm" :draggable="false">
+    <div class="dialog-body">
+      <div class="form-field">
+        <label class="field-label">選擇醫師</label>
+        <p-select v-model="linkDoctorId" :options="availableDoctorsForSales" option-label="label" option-value="value" placeholder="請選擇" fluid></p-select>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="showLinkDoctorDialog=false" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="submitLinkDoctor" type="button" size="small">加入</p-button>
+    </template>
+  </p-dialog>
+  <!-- Link Assistant to Doctor -->
+  <p-dialog v-model:visible="showLinkAssistantDialog" header="加入助理" modal class="dialog-sm" :draggable="false">
+    <div class="dialog-body">
+      <div class="form-field">
+        <label class="field-label">選擇助理</label>
+        <p-select v-model="linkAssistantId" :options="availableAssistantsForDoctor" option-label="label" option-value="value" placeholder="請選擇" fluid></p-select>
+      </div>
+    </div>
+    <template #footer>
+      <p-button @click="showLinkAssistantDialog=false" type="button" severity="secondary" outlined size="small">取消</p-button>
+      <p-button @click="submitLinkAssistant" type="button" size="small">加入</p-button>
+    </template>
+  </p-dialog>
+  <p-toast></p-toast>
+  <p-confirm-dialog :draggable="false"></p-confirm-dialog>
+</div>
+
+<script src="https://scrm.oakmega.site/0/js/vue3.prod.js"></script>
+<script src="https://scrm.oakmega.site/0/js/primevue.min.js"></script>
+<script src="https://scrm.oakmega.site/0/js/axios.min.js"></script>
+<script src="https://scrm.oakmega.site/0/js/lara.js"></script>
+<script>
+const { createApp, ref, computed, watch, nextTick } = Vue;
+const app = createApp({
+  setup() {
+    const toast = PrimeVue.useToast();
+    const confirm = PrimeVue.useConfirm();
+
+    // 固定設定
+    const sidebarMenuTheme = {
+      root: {
+        background:'transparent', borderColor:'transparent', color:'#4A5C6A',
+        borderRadius:'0', shadow:'none',
+      },
+      list: { padding:'16px', gap:'6px' },
+      item: {
+        color:'#4A5C6A', focusColor:'#0A6E6B',
+        focusBackground:'#F4F6F8', borderRadius:'7px',
+        padding:'10px 12px', gap:'10px',
+        icon: { color:'#7A8F9E', focusColor:'#0A6E6B', size:'15px' },
+        label: { fontSize:'14px', fontWeight:'400' },
+      },
+    };
+    const sidebarLogoutTheme = {
+      root: {
+        label: { fontWeight:'400' },
+        secondary: {
+          background:'transparent', hoverBackground:'#F4F6F8',
+          activeBackground:'#EEF2F5', borderColor:'transparent',
+          hoverBorderColor:'transparent', activeBorderColor:'transparent',
+          color:'#4A5C6A', hoverColor:'#0A6E6B', activeColor:'#0A6E6B',
+        },
+      },
+    };
+    const cancerTypes = ['肺癌','乳癌','大腸癌','肝癌','胃癌','攝護腺癌','子宮頸癌','淋巴瘤','其他'];
+    const nodeDefs = [
+      { n:1, label:'N1 · 檢體從台灣寄出',            desc:'逾期標記：超過 3 天未更新' },
+      { n:2, label:'N2 · 實驗室收件',                 desc:'逾期標記：超過 3 天（延長模式 10 天）未更新' },
+      { n:3, label:'N3 · 預估報告完成日（QC 通過）',  desc:'逾期標記：超過 3 天未更新' },
+      { n:4, label:'N4 · 電子檔報告上傳完成',         desc:'逾期標記：超過 3 天未更新' },
+      { n:5, label:'N5 · 紙本報告寄出',               desc:'逾期標記：超過 3 天未更新' },
+    ];
+
+    // 登入
+    const loggedIn = ref(false);
+    const loginStep = ref('credentials');
+    const loginEmail = ref('');
+    const loginPassword = ref('');
+    const loginOtp = ref('');
+    const loginError = ref('');
+
+    function showLoginError(message) {
+      loginError.value = message;
+      toast.add({ severity:'error', summary:message, life:3000 });
+    }
+
+    // Demo 登入：使用畫面提示的帳號、使用者代號與 OTP 驗證。
+    function submitCredentials() {
+      if (!loginEmail.value.trim() || !loginPassword.value) {
+        showLoginError('請輸入電子郵件與使用者代號');
+        return;
+      }
+      if (loginEmail.value.trim() !== 'admin@tsh.com' || loginPassword.value !== 'admin.li') {
+        showLoginError('電子郵件或使用者代號不正確');
+        return;
+      }
+      loginError.value = '';
+      loginOtp.value = '';
+      loginStep.value = 'otp';
+    }
+    function submitOtp() {
+      if (loginStep.value !== 'otp') return;
+      if (loginOtp.value !== '123456') {
+        showLoginError(loginOtp.value ? '驗證碼不正確，請重新輸入' : '請輸入 OTP 驗證碼');
+        return;
+      }
+      loginError.value = '';
+      loggedIn.value = true;
+    }
+    function logout() {
+      loggedIn.value = false; loginStep.value = 'credentials';
+      loginPassword.value = ''; loginOtp.value = ''; loginError.value = '';
+    }
+
+    // 頁面導覽
+    const page = ref('cases');
+    const pageHost = ref(null);
+    // 切換頁面或分頁時，內容區回到最上方
+    function scrollPageTop() { nextTick(() => pageHost.value?.scrollTo({ top:0, behavior:'instant' })); }
+    const userTab = ref('sales');
+    watch(userTab, scrollPageTop);
+    const navigationItems = computed(() => {
+      return [
+        { label:'個案管理', icon:'pi pi-file', active:['cases','case-detail'].includes(page.value), command:() => navigate('cases') },
+        { label:'人員管理', icon:'pi pi-users', active:['users','user-detail'].includes(page.value), command:() => navigate('users', 'sales') },
+      ];
+    });
+
+    function openCaseRow(event) { navigate('case-detail', event.data); }
+    function openUserRow(event, type) { navigate('user-detail', { user:event.data, type }); }
+    function navigate(targetPage, data) {
+      if (targetPage === 'user-detail' && (!data?.user || !['sales','doctor','assistant','window','admin'].includes(data.type))) return;
+      if (targetPage === 'case-detail' && !data) return;
+      page.value = targetPage; editMode.value = false; showProgressDialog.value = false; editUserMode.value = false; editUserForm.value = {}; pendingFile.value = null;
+      if (targetPage === 'case-detail' && data) selectedCase.value = data;
+      if (targetPage === 'users' && data) userTab.value = data;
+      if (targetPage === 'user-detail' && data) userDetail.value = data;
+      pdfPasswordBanner.value = null;
+      scrollPageTop();
+    }
+
+    // 個案列表與詳情
+    const cases = ref([
+      { id:'TSH-2026-0042', name:'周○○', birthdate:'1965-03-15', pid:'A123456789', cancer:'肺癌',   hospital:'台大醫院', doctorIds:['D001'],        visibleAstIds:['A001'], visibleWinIds:['W001'], isDirect:true,  chartNo:'',           n2Extended:false, progress:{n1:'2026-05-01',n2:'2026-05-05',n3:'2026-05-20',n4:'',n5:''}, files:[{id:'f1',name:'基因報告_2026-05.pdf',type:'pdf',size:'2.3 MB',uploadedAt:'2026-05-20',encrypted:true}], notes:'', createdAt:'2026-05-01', createdBy:'王崇霖', status:'active' },
+      { id:'TSH-2026-0041', name:'王○○', birthdate:'1972-07-22', pid:'B234567890', cancer:'乳癌',   hospital:'台北榮總', doctorIds:['D002'],        visibleAstIds:['A002'], visibleWinIds:[], isDirect:false, chartNo:'MR-0041',    n2Extended:false, progress:{n1:'2026-04-20',n2:'2026-04-25',n3:'2026-05-01',n4:'2026-05-05',n5:'2026-05-08'}, files:[{id:'f2',name:'NGS報告_王.pdf',type:'pdf',size:'3.1 MB',uploadedAt:'2026-05-05',encrypted:true},{id:'f3',name:'補充說明.txt',type:'txt',size:'8 KB',uploadedAt:'2026-05-05',encrypted:false}], notes:'需追蹤第二療程', createdAt:'2026-04-20', createdBy:'王崇霖', status:'done' },
+      { id:'TSH-2026-0040', name:'李○○', birthdate:'1958-11-08', pid:'C345678901', cancer:'大腸癌', hospital:'台大醫院', doctorIds:['D001','D003'], visibleAstIds:['A001'], visibleWinIds:[], isDirect:false, chartNo:'MR-0040',    n2Extended:true,  progress:{n1:'2026-04-15',n2:'2026-04-20',n3:'',n4:'',n5:''}, files:[], notes:'N2 延長判定，目前已超過 10 天仍未進入 N3', createdAt:'2026-04-15', createdBy:'王崇霖', status:'overdue' },
+      { id:'TSH-2026-0039', name:'張○○', birthdate:'1969-05-30', pid:'D456789012', cancer:'肝癌',   hospital:'長庚醫院', doctorIds:['D003'],        visibleAstIds:[], visibleWinIds:[], isDirect:false, chartNo:'MR-0039',    n2Extended:false, progress:{n1:'2026-04-01',n2:'2026-04-06',n3:'2026-04-15',n4:'2026-04-22',n5:'2026-04-28'}, files:[{id:'f4',name:'報告_張.pdf',type:'pdf',size:'1.8 MB',uploadedAt:'2026-04-22',encrypted:true}], notes:'', createdAt:'2026-04-01', createdBy:'王崇霖', status:'done' },
+      { id:'TSH-2026-0038', name:'陳○○', birthdate:'1981-02-14', pid:'E567890123', cancer:'肺癌',   hospital:'台中榮總', doctorIds:['D004'],        visibleAstIds:[], visibleWinIds:[], isDirect:true,  chartNo:'',           n2Extended:false, progress:{n1:'2026-04-08',n2:'',n3:'',n4:'',n5:''}, files:[], notes:'待確認檢體規格', createdAt:'2026-04-08', createdBy:'王崇霖', status:'active' },
+      { id:'TSH-2026-0037', name:'劉○○', birthdate:'1976-09-03', pid:'F678901234', cancer:'胃癌',   hospital:'成大醫院', doctorIds:['D005'],        visibleAstIds:[], visibleWinIds:[], isDirect:false, chartNo:'MR-0037',    n2Extended:false, progress:{n1:'2026-03-20',n2:'',n3:'',n4:'',n5:''}, files:[], notes:'因病患意願中止', createdAt:'2026-03-20', createdBy:'王崇霖', status:'terminated' },
+    ]);
+    const search = ref('');
+    const filterCancer = ref('');
+    const filterStatus = ref('');
+    const selectedCase = ref(null);
+    const editMode = ref(false);
+    const editForm = ref({});
+    const showProgressDialog = ref(false);
+    const progressForm = ref({ progress:{}, n2Extended:false });
+    const showCaseDialog = ref(false);
+    const caseForm = ref({ caseNumber:'', name:'', birthdate:'', pid:'', cancer:'', hospital:'', doctorIds:[], notes:'', isDirect:false, chartNo:'' });
+    const cancerFilterOptions = computed(() => [{ label:'癌症類型', value:'' }, ...cancerTypes.map(value => ({ label:value, value }))]);
+    const statusFilterOptions = computed(() => [{ label:'全部狀態', value:'' }, ...['active','overdue','done','terminated'].map(value => ({ label:statusLabel(value), value }))]);
+    const filteredCases = computed(() => {
+      const q = search.value.toLowerCase();
+      return cases.value.filter(c =>
+        (!q || c.name.includes(q) || c.id.toLowerCase().includes(q) || c.doctorIds.some(dId => getDoctorName(dId).includes(q)) || c.hospital.includes(q)) &&
+        (!filterCancer.value || c.cancer === filterCancer.value) &&
+        (!filterStatus.value || c.status === filterStatus.value)
+      );
+    });
+
+    function caseRowClass(c) { return c.status === 'overdue' ? 'row-overdue' : ''; }
+    function parseDate(value) {
+      if (!value) return null;
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    function nodeMarkerStyle(state) {
+      return {
+        background:state === 'done' ? 'var(--status-done)' : state === 'active' ? 'var(--brand-400)' : 'var(--surface-2)',
+        color:state === 'pending' ? 'var(--text-muted)' : '#fff',
+        width:'28px', height:'28px', fontSize:'12px',
+      };
+    }
+    function statusLabel(s) { return { active:'進行中', overdue:'逾期', done:'已完成', terminated:'已中止' }[s] || s; }
+    function statusSeverity(s) { return { active:'info', overdue:'warn', done:'success', terminated:'danger' }[s] || 'secondary'; }
+    function statusColor(s) { return { active:'var(--status-active)', overdue:'var(--status-overdue)', done:'var(--status-done)', terminated:'var(--status-terminated)' }[s] || 'var(--border)'; }
+    function caseCurrentStep(c) { for (let n=5;n>=1;n--) { if (c.progress['n'+n]) return n; } return 0; }
+    function nodeLabel(n) { return ['','檢體寄出','實驗室收件','QC通過','報告上傳','紙本寄出'][n]||''; }
+    function getNodeState(c, n) {
+      if (c.progress['n'+n]) return 'done';
+      const lastDone = [1,2,3,4,5].reduce((acc,i) => c.progress['n'+i]?i:acc, 0);
+      return n === lastDone+1 ? 'active' : 'pending';
+    }
+    function terminateCase() {
+      const target = selectedCase.value;
+      confirm.require({
+        header:'中止個案',
+        message:`確定要中止個案 ${target.id}？中止後進程將無法繼續更新，但可隨時恢復。`,
+        icon:'pi pi-exclamation-triangle',
+        rejectProps:{ label:'取消', severity:'secondary', outlined:true, size:'small' },
+        acceptProps:{ label:'中止個案', severity:'danger', size:'small' },
+        accept:() => {
+          target.status = 'terminated';
+          toast.add({ severity:'warn', summary:'個案已中止', detail:target.id, life:3000 });
+        },
+      });
+    }
+    function restoreCase() {
+      const target = selectedCase.value;
+      confirm.require({
+        header:'恢復個案',
+        message:`確定要恢復個案 ${target.caseNumber || target.id}？恢復後即可繼續更新個案資料與進程。`,
+        icon:'pi pi-exclamation-triangle',
+        rejectProps:{ label:'取消', severity:'secondary', outlined:true, size:'small' },
+        acceptProps:{ label:'恢復個案', severity:'warn', size:'small' },
+        accept:() => {
+          target.status = 'active';
+          toast.add({ severity:'success', summary:'個案已恢復', detail:target.id, life:3000 });
+        },
+      });
+    }
+    function enterEdit() {
+      editMode.value = true;
+      editForm.value = { ...selectedCase.value, doctorIds:[...selectedCase.value.doctorIds], visibleAstIds:[...selectedCase.value.visibleAstIds], visibleWinIds:[...selectedCase.value.visibleWinIds] };
+    }
+    function cancelEdit() { editMode.value = false; }
+    function saveEdit() {
+      Object.assign(selectedCase.value, {
+        name:editForm.value.name, birthdate:editForm.value.birthdate, pid:editForm.value.pid,
+        cancer:editForm.value.cancer, hospital:editForm.value.hospital,
+        doctorIds:[...editForm.value.doctorIds], notes:editForm.value.notes,
+        visibleAstIds:[...editForm.value.visibleAstIds], visibleWinIds:[...editForm.value.visibleWinIds],
+        isDirect: editForm.value.isDirect,
+        chartNo: editForm.value.chartNo,
+      });
+      editMode.value = false;
+      toast.add({ severity:'success', summary:'已儲存', detail:'個案資訊已更新', life:3000 });
+    }
+    function enterProgressEdit() {
+      progressForm.value = { progress:{...selectedCase.value.progress}, n2Extended:selectedCase.value.n2Extended };
+      showProgressDialog.value = true;
+    }
+    function saveProgressEdit() {
+      Object.assign(selectedCase.value, {
+        progress:{...progressForm.value.progress},
+        n2Extended:progressForm.value.n2Extended,
+      });
+      selectedCase.value.status = selectedCase.value.status === 'terminated' ? 'terminated' : (selectedCase.value.progress.n5 ? 'done' : 'active');
+      showProgressDialog.value = false;
+      toast.add({ severity:'success', summary:'已儲存', detail:'個案進程已更新', life:3000 });
+    }
+    function openAddCase() {
+      caseForm.value = { caseNumber:'', name:'', birthdate:'', pid:'', cancer:'', hospital:'', doctorIds:[], notes:'', isDirect:false, chartNo:'' };
+      showCaseDialog.value = true;
+    }
+    function submitCreate() {
+      if (!caseForm.value.caseNumber || !caseForm.value.name || !caseForm.value.cancer || !caseForm.value.doctorIds.length) {
+        toast.add({ severity:'warn', summary:'請填寫必填欄位（個案編號、姓名、癌症類型、主治醫師）', life:3000 }); return;
+      }
+      const today = new Date().toISOString().split('T')[0];
+      const newCase = { ...caseForm.value, doctorIds:[...caseForm.value.doctorIds], id:'SYS-'+Date.now(), visibleAstIds:[], visibleWinIds:[], n2Extended:false, progress:{n1:'',n2:'',n3:'',n4:'',n5:''}, files:[], createdAt:today, createdBy:'王崇霖', status:'active' };
+      cases.value.unshift(newCase);
+      toast.add({ severity:'success', summary:'個案已建立', detail:caseForm.value.caseNumber, life:3000 });
+      showCaseDialog.value = false;
+      navigate('case-detail', newCase);
+    }
+
+    // 人員資料與關聯查詢
+    const salesList = ref([
+      { id:'S001', name:'陳小明', phone:'0912-345-678', email:'chen@tsh.com', region:'台北院區', doctorIds:['D001','D002'] },
+      { id:'S002', name:'林美玲', phone:'0923-456-789', email:'lin@tsh.com',  region:'台中院區', doctorIds:['D002','D003'] },
+      { id:'S003', name:'王志豪', phone:'0934-567-890', email:'wang@tsh.com', region:'南部院區', doctorIds:['D003','D004','D005'] },
+    ]);
+    const doctorList = ref([
+      { id:'D001', name:'林大明', hospital:'台大醫院',  phone:'02-2312-3456 #6001', email:'lin-dm@ntu.edu.tw', assistantIds:['A001'] },
+      { id:'D002', name:'陳雅婷', hospital:'台北榮總',  phone:'02-2871-2121 #3301', email:'chen-yt@vgh.tw', assistantIds:['A002'] },
+      { id:'D003', name:'王建國', hospital:'長庚醫院',  phone:'03-3281-2200 #2001', email:'wang-jk@cgmh.org.tw', assistantIds:[] },
+      { id:'D004', name:'劉志明', hospital:'台中榮總',  phone:'04-2359-2525 #4001', email:'liu-zm@vghtc.gov.tw', assistantIds:[] },
+      { id:'D005', name:'吳美華', hospital:'成大醫院',  phone:'06-2353535 #3001',   email:'wu-mh@mail.ncku.edu.tw', assistantIds:[] },
+    ]);
+    const assistantList = ref([
+      { id:'A001', name:'李小助', hospital:'台大醫院',  doctorId:'D001', phone:'02-2312-3456 #6002', email:'li-ast@ntu.edu.tw' },
+      { id:'A002', name:'張助手', hospital:'台北榮總',  doctorId:'D002', phone:'02-2871-2121 #3302', email:'chang-ast@vgh.tw' },
+    ]);
+    const windowList = ref([
+      { id:'W001', name:'黃院所', hospital:'台大醫院', doctorId:'D001', phone:'02-2312-3456 #6003', email:'huang-win@ntu.edu.tw' },
+    ]);
+    const adminList = ref([
+      { id:'ADM001', name:'王崇霖', phone:'02-2345-6789', email:'admin@tsh.com',     userCode:'admin.li' },
+      { id:'ADM002', name:'林靜怡', phone:'02-2345-6790', email:'lin@tsh-admin.com', userCode:'lin.jy' },
+    ]);
+    const doctorOptions = computed(() => doctorList.value.map(d => ({ label: d.name + '（' + d.hospital + '）', value: d.id })));
+    const assistantOptions = computed(() => assistantList.value.map(a => ({ label: a.name + '（' + a.hospital + '）', value: a.id })));
+    const windowOptions = computed(() => windowList.value.map(w => ({ label: w.name + '（' + w.hospital + '）', value: w.id })));
+
+    function validDoctorIds(ids) { return (ids || []).filter(id => getDoctor(id)); }
+    function validAssistantIds(ids) { return (ids || []).filter(id => getAssistant(id)); }
+    function getDoctorName(id) { return doctorList.value.find(d => d.id===id)?.name || '—'; }
+    function getDoctorHospital(id) { return doctorList.value.find(d => d.id===id)?.hospital || ''; }
+    function getDoctor(id) { return doctorList.value.find(d => d.id===id); }
+    function getAssistantName(id) { return assistantList.value.find(a => a.id===id)?.name || '—'; }
+    function getAssistantHospital(id) { return assistantList.value.find(a => a.id===id)?.hospital || ''; }
+    function getAssistant(id) { return assistantList.value.find(a => a.id===id); }
+    function getWindowName(id) { return windowList.value.find(w => w.id===id)?.name || '—'; }
+    function getWindow(id) { return windowList.value.find(w => w.id===id); }
+    function getCaseSales(c) { return salesList.value.filter(s => s.doctorIds.some(dId => c.doctorIds.includes(dId))); }
+    function getDoctorCases(doctorId) { return cases.value.filter(c => c.doctorIds.includes(doctorId)); }
+    function getSalesCases(salesId) {
+      const s = salesList.value.find(s => s.id===salesId); if (!s) return [];
+      const seen = new Set();
+      return cases.value.filter(c => { if (c.doctorIds.some(dId => s.doctorIds.includes(dId)) && !seen.has(c.id)) { seen.add(c.id); return true; } return false; });
+    }
+    function getAssistantVisibleCases(aId) { return cases.value.filter(c => c.visibleAstIds.includes(aId)); }
+    function getWindowVisibleCases(wId) { return cases.value.filter(c => c.visibleWinIds.includes(wId)); }
+
+    // 檔案上傳
+    const caseUpload = ref(null);
+    const pendingFile = ref(null);
+    const pdfPasswordBanner = ref(null);
+
+    function onPrimeFileSelect(event) {
+      const file = event.files[0];
+      if (file) stageFile(file);
+    }
+    function stageFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!['pdf','txt','docx'].includes(ext)) {
+        toast.add({ severity:'warn', summary:'僅支援 PDF、TXT、DOCX 檔案', life:3000 });
+        caseUpload.value?.clear();
+        return;
+      }
+      const size = file.size>1024*1024?(file.size/1024/1024).toFixed(1)+' MB':(file.size/1024).toFixed(0)+' KB';
+      pendingFile.value = { file, name:file.name, size, ftype:ext };
+    }
+    function cancelFile() { pendingFile.value=null; }
+    function confirmFile() {
+      if (!pendingFile.value) return;
+      const isPdf = pendingFile.value.ftype === 'pdf';
+      selectedCase.value.files.push({
+        id: 'f-'+Date.now(),
+        name: pendingFile.value.name,
+        type: pendingFile.value.ftype,
+        size: pendingFile.value.size,
+        uploadedAt: new Date().toISOString().split('T')[0],
+        encrypted: true,
+      });
+      toast.add({ severity:'success', summary:'檔案已上傳', detail:pendingFile.value.name+'（伺服器端加密）', life:3000 });
+      if (isPdf) {
+        const { isDirect, pid, chartNo } = selectedCase.value;
+        const fallback = !isDirect && !chartNo;
+        const pwValue = (isDirect || fallback) ? (pid || '（尚未填寫身分證字號）') : chartNo;
+        pdfPasswordBanner.value = { direct: isDirect, fallback, pwValue };
+      }
+      pendingFile.value=null;
+    }
+    function removeFile(id) {
+      const target = selectedCase.value;
+      const file = target.files.find(f => f.id === id);
+      if (!file) return;
+      confirm.require({
+        header:'移除檔案',
+        message:`確定要移除檔案「${file.name}」？`,
+        icon:'pi pi-exclamation-triangle',
+        rejectProps:{ label:'取消', severity:'secondary', outlined:true, size:'small' },
+        acceptProps:{ label:'移除', severity:'danger', size:'small' },
+        accept:() => {
+          target.files = target.files.filter(f => f.id !== id);
+          toast.add({ severity:'success', summary:'檔案已移除', detail:file.name, life:3000 });
+        },
+      });
+    }
+
+    // 人員編輯與新增
+    const userDetail = ref(null);
+    const editUserMode = ref(false);
+    const editUserForm = ref({});
+    const showUserDialog = ref(false);
+    const userForm = ref({ role:'', name:'', hospital:'', phone:'', email:'', doctorId:'', region:'' });
+
+    function enterUserEdit() {
+      const u = userDetail.value.user;
+      editUserForm.value = { name: u.name||'', phone: u.phone||'', email: u.email||'', hospital: u.hospital||'', region: u.region||'', userCode: u.userCode||'' };
+      editUserMode.value = true;
+    }
+    function cancelUserEdit() { editUserMode.value = false; editUserForm.value = {}; }
+    function saveUserEdit() {
+      const type = userDetail.value.type;
+      const id = userDetail.value.user.id;
+      const f = editUserForm.value;
+      const listMap = { sales: salesList.value, doctor: doctorList.value, assistant: assistantList.value, window: windowList.value, admin: adminList.value };
+      const list = listMap[type]; if (!list) return;
+      const idx = list.findIndex(u => u.id === id); if (idx < 0) return;
+      list[idx].name = f.name; list[idx].phone = f.phone; list[idx].email = f.email;
+      if ('hospital' in list[idx]) list[idx].hospital = f.hospital;
+      if (type === 'sales') list[idx].region = f.region;
+      if (type === 'admin') list[idx].userCode = f.userCode;
+      userDetail.value = { ...userDetail.value, user: { ...list[idx] } };
+      editUserMode.value = false;
+      toast.add({ severity:'success', summary:'已更新', detail:'資料已儲存', life:3000 });
+    }
+    function openAddUser() {
+      const roleMap = { sales:'sales', doctors:'doctors', assistants:'assistants', windows:'windows', admins:'admins' };
+      userForm.value={ role: roleMap[userTab.value]||'', name:'',hospital:'',phone:'',email:'',doctorId:'',region:'' };
+      showUserDialog.value=true;
+    }
+    function submitAddUser() {
+      if (!userForm.value.role || !userForm.value.name) return;
+      const role = userForm.value.role;
+      const id = role[0].toUpperCase()+Date.now();
+      if (role==='sales') salesList.value.push({ id, name:userForm.value.name, phone:userForm.value.phone, email:userForm.value.email, region:userForm.value.region||'未設定', doctorIds:[] });
+      else if (role==='doctors') doctorList.value.push({ id, name:userForm.value.name, hospital:userForm.value.hospital, phone:userForm.value.phone, email:userForm.value.email, assistantIds:[] });
+      else if (role==='assistants') assistantList.value.push({ id, name:userForm.value.name, hospital:userForm.value.hospital, phone:userForm.value.phone, email:userForm.value.email, doctorId:userForm.value.doctorId });
+      else if (role==='windows') windowList.value.push({ id, name:userForm.value.name, hospital:userForm.value.hospital, phone:userForm.value.phone, email:userForm.value.email, doctorId:userForm.value.doctorId });
+      else if (role==='admins') adminList.value.push({ id, name:userForm.value.name, phone:userForm.value.phone, email:userForm.value.email, userCode:'' });
+      userTab.value = role;
+      showUserDialog.value=false;
+      toast.add({ severity:'success', summary:'已新增', detail:userForm.value.name, life:3000 });
+    }
+
+    // 醫師與助理關聯管理
+    const showLinkDoctorDialog = ref(false);
+    const linkDoctorId = ref('');
+    const showLinkAssistantDialog = ref(false);
+    const linkAssistantId = ref('');
+    const availableDoctorsForSales = computed(() => {
+      if (!userDetail.value) return [];
+      const taken = userDetail.value.user.doctorIds;
+      return doctorList.value.filter(d => !taken.includes(d.id)).map(d => ({ label: d.name + '（' + d.hospital + '）', value: d.id }));
+    });
+    const availableAssistantsForDoctor = computed(() => {
+      if (!userDetail.value) return [];
+      const taken = userDetail.value.user.assistantIds;
+      return assistantList.value.filter(a => !taken.includes(a.id)).map(a => ({ label: a.name + '（' + a.hospital + '）', value: a.id }));
+    });
+
+    function openLinkDoctor() { linkDoctorId.value=''; showLinkDoctorDialog.value=true; }
+    function submitLinkDoctor() {
+      if (!linkDoctorId.value) return;
+      userDetail.value.user.doctorIds.push(linkDoctorId.value);
+      showLinkDoctorDialog.value=false;
+      toast.add({ severity:'success', summary:'已加入', detail:getDoctorName(linkDoctorId.value), life:3000 });
+    }
+    function unlinkDoctorFromSales(dId) {
+      const target = userDetail.value.user;
+      const name = getDoctorName(dId);
+      confirm.require({
+        header:'移除醫師',
+        message:`確定要將「${name}」從此業務的管理醫師中移除？此操作只會解除關聯，不會刪除醫師帳號。`,
+        icon:'pi pi-exclamation-triangle',
+        rejectProps:{ label:'取消', severity:'secondary', outlined:true, size:'small' },
+        acceptProps:{ label:'移除', severity:'danger', size:'small' },
+        accept:() => {
+          target.doctorIds = target.doctorIds.filter(id => id !== dId);
+          toast.add({ severity:'success', summary:'已移除', detail:name, life:3000 });
+        },
+      });
+    }
+    function openLinkAssistant() { linkAssistantId.value=''; showLinkAssistantDialog.value=true; }
+    function submitLinkAssistant() {
+      if (!linkAssistantId.value) return;
+      userDetail.value.user.assistantIds.push(linkAssistantId.value);
+      const ast = getAssistant(linkAssistantId.value);
+      if (ast) ast.doctorId = userDetail.value.user.id;
+      showLinkAssistantDialog.value=false;
+      toast.add({ severity:'success', summary:'已加入', detail:getAssistantName(linkAssistantId.value), life:3000 });
+    }
+    function unlinkAssistantFromDoctor(aId) {
+      const target = userDetail.value.user;
+      const name = getAssistantName(aId);
+      confirm.require({
+        header:'移除助理',
+        message:`確定要將「${name}」從此醫師的助理中移除？此操作只會解除關聯，不會刪除助理帳號。`,
+        icon:'pi pi-exclamation-triangle',
+        rejectProps:{ label:'取消', severity:'secondary', outlined:true, size:'small' },
+        acceptProps:{ label:'移除', severity:'danger', size:'small' },
+        accept:() => {
+          target.assistantIds = target.assistantIds.filter(id => id !== aId);
+          const ast = getAssistant(aId);
+          if (ast && ast.doctorId === target.id) ast.doctorId = '';
+          toast.add({ severity:'success', summary:'已移除', detail:name, life:3000 });
+        },
+      });
+    }
+
+    return {
+      // 固定設定
+      sidebarMenuTheme,
+      sidebarLogoutTheme,
+      cancerTypes,
+      nodeDefs,
+      // 登入
+      loggedIn,
+      loginStep,
+      loginEmail,
+      loginPassword,
+      loginOtp,
+      loginError,
+      submitCredentials,
+      submitOtp,
+      logout,
+      // 頁面導覽
+      page,
+      pageHost,
+      userTab,
+      navigationItems,
+      openCaseRow,
+      openUserRow,
+      navigate,
+      // 個案列表與詳情
+      cases,
+      search,
+      filterCancer,
+      filterStatus,
+      selectedCase,
+      editMode,
+      editForm,
+      showProgressDialog,
+      progressForm,
+      enterProgressEdit,
+      saveProgressEdit,
+      caseForm,
+      showCaseDialog,
+      openAddCase,
+      cancerFilterOptions,
+      statusFilterOptions,
+      filteredCases,
+      caseRowClass,
+      parseDate,
+      nodeMarkerStyle,
+      statusLabel,
+      statusSeverity,
+      statusColor,
+      caseCurrentStep,
+      nodeLabel,
+      getNodeState,
+      terminateCase,
+      restoreCase,
+      enterEdit,
+      cancelEdit,
+      saveEdit,
+      submitCreate,
+      // 人員資料與關聯查詢
+      salesList,
+      doctorList,
+      assistantList,
+      windowList,
+      adminList,
+      doctorOptions,
+      assistantOptions,
+      windowOptions,
+      validDoctorIds,
+      validAssistantIds,
+      getDoctorName,
+      getDoctorHospital,
+      getDoctor,
+      getAssistantName,
+      getAssistantHospital,
+      getAssistant,
+      getWindowName,
+      getWindow,
+      getCaseSales,
+      getDoctorCases,
+      getSalesCases,
+      getAssistantVisibleCases,
+      getWindowVisibleCases,
+      // 檔案上傳
+      caseUpload,
+      pendingFile,
+      pdfPasswordBanner,
+      onPrimeFileSelect,
+      cancelFile,
+      confirmFile,
+      removeFile,
+      // 人員編輯與新增
+      userDetail,
+      editUserMode,
+      editUserForm,
+      showUserDialog,
+      userForm,
+      enterUserEdit,
+      cancelUserEdit,
+      saveUserEdit,
+      openAddUser,
+      submitAddUser,
+      // 醫師與助理關聯管理
+      showLinkDoctorDialog,
+      linkDoctorId,
+      showLinkAssistantDialog,
+      linkAssistantId,
+      availableDoctorsForSales,
+      availableAssistantsForDoctor,
+      openLinkDoctor,
+      submitLinkDoctor,
+      unlinkDoctorFromSales,
+      openLinkAssistant,
+      submitLinkAssistant,
+      unlinkAssistantFromDoctor,
+    };
+  },
+});
+
+// Keep brand colors and compact controls in one Lara preset.
+const Lara = PrimeUIX.Themes.Lara;
+// 東生華品牌色階，Lara 的 info（blue / sky）元件一併改用品牌青綠。
+const brandPalette = { 50:'#EAF8F7', 100:'#D2F1F0', 200:'#A6E3E1', 300:'#75D3D0', 400:'#47CCC8', 500:'#1FA9A5', 600:'#0A7672', 700:'#0A6E6B', 800:'#0B5856', 900:'#0B4847', 950:'#063331' };
+const successPalette = { 50:'#EEF7F1', 100:'#D6EDDD', 200:'#ADDABB', 300:'#7DC294', 400:'#52B27A', 500:'#3BAA6A', 600:'#2F7D46', 700:'#276B3C', 800:'#225332', 900:'#1C4429', 950:'#0E2616' };
+// 警告用亮橘：500 為色條，600 以上為文字。
+const warnPalette = { 50:'#FFF4E5', 100:'#FFE7C2', 200:'#FDD08A', 300:'#FBB74F', 400:'#F8A82A', 500:'#F59E0B', 600:'#B45309', 700:'#92400E', 800:'#78350F', 900:'#5C2A0C', 950:'#3B1A05' };
+// 中性色沿用既有的藍灰色票，Dialog、Toast、Select 等元件共用。
+const surfacePalette = { 0:'#ffffff', 50:'#F4F6F8', 100:'#EEF2F5', 200:'#DDE3E9', 300:'#B8C4CE', 400:'#93A4B1', 500:'#7A8F9E', 600:'#4A5C6A', 700:'#36454F', 800:'#26323B', 900:'#1A2530', 950:'#0F171E' };
+// Merge nested tokens so unspecified Lara defaults stay available.
+function mergePreset(base, overrides) {
+  const result = { ...base };
+  Object.entries(overrides).forEach(([key, value]) => {
+    result[key] = value && typeof value === 'object' && !Array.isArray(value)
+      ? mergePreset(base?.[key] || {}, value)
+      : value;
+  });
+  return result;
+}
+const theme = mergePreset(Lara, {
+  primitive:{ blue:brandPalette, sky:brandPalette, green:successPalette, yellow:warnPalette, orange:warnPalette },
+  semantic:{
+    surface:surfacePalette,
+    typography:{ fontFamily:"'Noto Sans TC', sans-serif", fontSize:'14px' },
+    primary:{ ...brandPalette, color:'#47CCC8', contrastColor:'#ffffff', hoverColor:'#3BBDB9', activeColor:'#2FB5B0' },
+    text:{ color:'#1A2530', hoverColor:'#0A6E6B', mutedColor:'#7A8F9E', hoverMutedColor:'#4A5C6A' },
+    content:{ background:'#ffffff', hoverBackground:'#F4F6F8', borderColor:'#DDE3E9' },
+    formField:{ borderRadius:'8px', paddingX:'0.75rem', paddingY:'0.5rem', borderColor:'#DDE3E9', focusBorderColor:'#1FA9A5' },
+  },
+  components:{
+    button:{ text:{ primary:{ color:'#0A6E6B' } }, link:{ color:'#0A6E6B', hoverColor:'#0B5856', activeColor:'#0B5856' }, root:{
+      borderRadius:'8px', paddingX:'16px', paddingY:'8px', gap:'6px', label:{ fontWeight:'600' },
+      sm:{ fontSize:'12px', paddingX:'12px', paddingY:'6px' },
+    }, outlined:{
+      primary:{ color:'#0A6E6B', borderColor:'#47CCC8' },
+      secondary:{ color:'#4A5C6A', borderColor:'#DDE3E9', hoverBackground:'#EEF2F5' },
+      danger:{ color:'#B93028', borderColor:'#f0c0bb', hoverBackground:'#FCECEA' },
+      warn:{ color:'#B45309', borderColor:'#FDD08A', hoverBackground:'#FFF4E5' },
+    } },
+    panel:{ root:{ borderRadius:'12px' }, header:{ padding:'14px 20px', background:'#fff', borderRadius:'12px 12px 0 0' }, content:{ padding:'0' } },
+    card:{ root:{ borderRadius:'12px' }, body:{ padding:'16px 20px', gap:'0' } },
+    progressbar:{ root:{ height:'6px', borderRadius:'3px', background:'#DDE3E9' } },
+    tag:{
+      root:{ fontSize:'12px', fontWeight:'600', padding:'2px 8px', gap:'4px' },
+      primary:{ background:'#E3F6F5', color:'#0A6E6B' },
+      info:{ background:'#E3F6F5', color:'#0A6E6B' },
+      success:{ background:'#E6F3EA', color:'#276B3C' },
+      warn:{ background:'#FFF4E5', color:'#B45309' },
+      danger:{ background:'#FCECEA', color:'#B93028' },
+      secondary:{ background:'#EEF2F5', color:'#4A5C6A' },
+    },
+    chip:{ root:{ borderRadius:'10px', paddingX:'9px', paddingY:'2px', gap:'5px' }, label:{ fontSize:'12px', fontWeight:'500' } },
+    datatable:{
+      headerCell:{ background:'#F4F6F8', color:'#7A8F9E', padding:'9px 20px', sm:{ padding:'9px 20px' } },
+      columnTitle:{ fontSize:'12px', fontWeight:'600' },
+      bodyCell:{ padding:'11px 20px', sm:{ padding:'11px 20px' } },
+    },
+    dialog:{ title:{ fontSize:'16px' }, content:{ padding:'0 1.25rem' }, footer:{ padding:'1.25rem' } },
+    breadcrumb:{ root:{ padding:'0', background:'transparent', gap:'6px' } },
+    toolbar:{ root:{ padding:'12px 20px', borderRadius:'0', gap:'10px', background:'#ffffff' } },
+  },
+});
+app.use(PrimeVue.Config, {
+  theme:{ preset:theme, options:{ darkModeSelector:false } },
+}).use(PrimeVue.ToastService).use(PrimeVue.ConfirmationService);
+
+const components = {
+  'p-button':'Button', 'p-input-text':'InputText', 'p-password':'Password',
+  'p-select':'Select', 'p-multiselect':'MultiSelect', 'p-textarea':'Textarea',
+  'p-checkbox':'Checkbox', 'p-date-picker':'DatePicker',
+  'p-dialog':'Dialog', 'p-toast':'Toast', 'p-confirm-dialog':'ConfirmDialog',
+  'p-icon-field':'IconField', 'p-input-icon':'InputIcon',
+  'p-data-table':'DataTable', 'p-column':'Column', 'p-tag':'Tag',
+  'p-progress-bar':'ProgressBar', 'p-timeline':'Timeline', 'p-avatar':'Avatar',
+  'p-tabs':'Tabs', 'p-tab-list':'TabList', 'p-tab':'Tab',
+  'p-breadcrumb':'Breadcrumb', 'p-panel':'Panel', 'p-card':'Card', 'p-toolbar':'Toolbar',
+  'p-message':'Message', 'p-file-upload':'FileUpload', 'p-divider':'Divider', 'p-menu':'Menu',
+};
+Object.entries(components).forEach(([name, component]) => app.component(name, PrimeVue[component]));
+
+app.mount('#app');
+</script>
+</body>
+</html>

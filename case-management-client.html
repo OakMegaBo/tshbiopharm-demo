@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>東生華 — 前台 Mockup</title>
+  <link rel="icon" href="https://www.tshbiopharm.com/rwd1427/store/f1/shortcut.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://scrm.oakmega.site/0/css/primeicons.css">
+  <style>
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    :root {
+      /* 東生華品牌青綠 rgb(71,204,200) = brand-400：按鈕與色塊用亮青綠＋白字，連結等文字用 brand-700 */
+      --brand-50:#EAF8F7; --brand-100:#D2F1F0; --brand-200:#A6E3E1; --brand-400:#47CCC8;
+      --brand-500:#1FA9A5; --brand-700:#0A6E6B;
+      --bg:#F4F6F8; --surface:#FFFFFF; --surface-2:#EEF2F5;
+      --border:#DDE3E9; --border-strong:#B8C4CE;
+      --text-primary:#1A2530; --text-secondary:#4A5C6A; --text-muted:#7A8F9E;
+      --green:#276B3C; --green-light:#E6F3EA;
+      --red:#B93028; --red-light:#FCECEA;
+      --amber:#B45309; --amber-light:#FFF4E5;
+      --docx:#1d4ed8; --docx-light:#dbeafe;
+      --red-border:#f0c0bb; --amber-border:#FDD08A;
+      /* 進度條、時間軸等非文字色塊用亮色 */
+      --status-active:#47CCC8; --status-done:#3BAA6A; --status-overdue:#F59E0B; --status-terminated:#E5484D;
+      --font:'Noto Sans TC',sans-serif;
+      /* 字級：12 輔助／標籤、14 內文、16 區塊標題、20 頁面標題 */
+      --fs-12:12px; --fs-14:14px; --fs-16:16px; --fs-20:20px;
+      --radius:8px; --radius-lg:12px;
+    }
+    body { margin:0; background:var(--bg); color:var(--text-primary); font:14px var(--font); font-variant-numeric:tabular-nums; }
+    h1, h2, p { margin:0; }
+    [v-cloak] { display:none !important; }
+    #app { display:flex; flex-direction:column; min-height:100vh; min-height:100dvh; }
+    .nav-bar { position:fixed; z-index:101; top:16px; bottom:16px; left:16px; width:160px; display:flex; flex-direction:column; align-items:stretch; gap:12px; padding:14px 12px; overflow-y:auto; overscroll-behavior:contain; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; }
+    .demo-nav-title { font-size:var(--fs-12); font-weight:600; color:var(--text-secondary); }
+    .nav-group { display:flex; flex-direction:column; align-items:stretch; gap:4px; }
+    .nav-sep { color:var(--text-muted); font-size:var(--fs-12); font-weight:600; padding:0 8px; margin-bottom:2px; }
+    .nav-bar .p-button { justify-content:flex-start; text-align:left; flex-shrink:0; }
+    .nav-bar .p-button-label { flex:0 1 auto; }
+    .demo-toggle, .demo-backdrop { display:none; }
+    @media (max-width:900px) {
+      .demo-toggle { position:fixed; z-index:102; top:max(12px,env(safe-area-inset-top)); left:max(12px,env(safe-area-inset-left)); display:flex; align-items:center; gap:6px; min-height:44px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--brand-700); font:600 var(--fs-12) var(--font); cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+      .demo-toggle:focus-visible { outline:2px solid var(--brand-700); outline-offset:2px; }
+      .nav-bar { display:none; top:calc(max(12px,env(safe-area-inset-top)) + 52px); left:max(12px,env(safe-area-inset-left)); bottom:max(12px,env(safe-area-inset-bottom)); box-shadow:0 4px 24px rgba(0,0,0,.08); }
+      .nav-bar.is-open { display:flex; }
+      .demo-backdrop { display:block; position:fixed; z-index:100; inset:0; background:rgba(10,61,92,.18); }
+    }
+    .client-app { width:100%; max-width:480px; margin:0 auto; flex:1; min-width:0; display:flex; flex-direction:column; background:var(--surface); }
+    .screen { display:flex; flex:1; flex-direction:column; min-width:0; background:var(--surface); }
+    .screen-body { flex:1; min-width:0; }
+    .topbar { display:flex; flex:0 0 56px; align-items:center; height:56px; background:#F5FBFB; color:var(--text-primary); padding:0 16px; position:sticky; top:0; z-index:10; box-shadow:0 1px 2px rgba(26,37,48,.06), 0 2px 8px rgba(26,37,48,.04); }
+    .topbar-row { display:flex; width:100%; height:100%; min-width:0; align-items:center; justify-content:space-between; gap:8px; }
+    .topbar-row > div:first-child { min-width:0; }
+    .topbar-title { font-size:var(--fs-16); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .topbar-switch { display:flex; min-width:0; align-items:center; gap:8px; }
+    .topbar-switch-separator { color:var(--border-strong); }
+    .topbar-switch button { padding:0; border:0; background:transparent; color:var(--text-muted); font-family:var(--font); line-height:inherit; cursor:pointer; }
+    .topbar-switch button[aria-current="page"] { color:var(--text-primary); }
+    .topbar-switch button:focus-visible { outline:2px solid var(--brand-400); outline-offset:4px; }
+    .topbar-leading { display:flex; flex:1; min-width:0; align-items:center; gap:4px; }
+    .topbar-title-row { display:flex; min-width:0; align-items:center; gap:8px; }
+    .topbar-title-row .p-tag { flex-shrink:0; white-space:nowrap; }
+    .topbar-account { display:flex; min-width:0; justify-content:flex-end; }
+    .topbar-account-name { min-width:0; font-size:var(--fs-12); color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .topbar-actions { display:flex; min-width:0; align-items:center; justify-content:flex-end; gap:8px; }
+    .topbar-actions > .p-button { flex-shrink:0; }
+    .topbar-back.p-button { flex:0 0 44px; width:44px; height:44px; margin-left:-12px; padding:0; }
+    .login-body { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px 24px; background:var(--bg); }
+    .login-card { width:100%; max-width:400px; --login-card-padding:32px; font-family:var(--font); line-height:1.6; }
+    @media (max-width:480px) { .login-card { --login-card-padding:24px; } }
+    @media (max-width:360px) {
+      .login-body { padding:24px 16px; }
+      .login-card { --login-card-padding:20px; }
+    }
+    .login-logo { margin-bottom:28px; }
+    .login-logo-image { display:block; height:64px; width:auto; max-width:100%; object-fit:contain; }
+    .login-title { font-size:var(--fs-20); font-weight:600; line-height:1.4; color:var(--brand-700); margin-bottom:4px; }
+    .login-card .form-group { margin-bottom:16px; }
+    .login-card .form-label { display:block; font-size:var(--fs-14); font-weight:400; color:var(--text-secondary); margin-bottom:5px; }
+    .login-card .form-hint { display:flex; align-items:flex-start; gap:5px; font-size:var(--fs-12); color:var(--text-muted); margin-top:6px; line-height:1.6; }
+    .login-card .form-hint .pi { flex-shrink:0; margin-top:3px; }
+    .login-card .p-inputtext { font-family:var(--font); }
+    .otp-row { display:flex; align-items:stretch; gap:8px; }
+    .login-card .otp-row > .p-inputtext { flex:1; width:0; min-width:0; font-family:var(--font); letter-spacing:.12em; text-align:center; }
+    .login-card .otp-row > .p-inputtext::placeholder { letter-spacing:normal; }
+    .login-card .otp-row > .p-button { flex:0 0 124px; padding-inline:8px; font-family:var(--font); }
+    .login-card .login-submit { margin-top:6px; font-family:var(--font); }
+    .search-bar { background:var(--surface); padding:10px 14px; border-bottom:1px solid var(--border); }
+    .case-search { padding:12px 14px; border-bottom:0; }
+    .case-search-field { position:relative; }
+    .case-search .p-inputtext { padding-right:48px; }
+    .case-search-clear { position:absolute; top:50%; right:1px; transform:translateY(-50%); display:flex; align-items:center; justify-content:center; width:44px; height:44px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--text-muted); cursor:pointer; }
+    .case-search-clear:hover { color:var(--text-secondary); }
+    .case-search-clear:focus-visible { outline:2px solid var(--brand-700); outline-offset:-3px; }
+    .case-search .p-iconfield { width:100%; }
+    .case-search .p-inputtext { width:100%; min-height:44px; padding-block:10px; border:1px solid var(--border); border-radius:8px; background:var(--bg); color:var(--text-primary); font-family:var(--font); font-size:var(--fs-14); font-weight:400; line-height:1.5; box-shadow:none; }
+    .case-search .p-inputtext::placeholder { color:var(--text-muted); opacity:1; font-weight:400; }
+    .case-search .p-inputicon { color:var(--text-muted); }
+    .case-search .p-inputtext:enabled:hover { border-color:var(--border-strong); }
+    .case-search .p-inputtext:enabled:focus { border-color:var(--brand-700); outline:2px solid var(--brand-200); outline-offset:1px; }
+    .case-list.p-dataview, .case-list .p-dataview-content,
+    .doctor-list.p-dataview, .doctor-list .p-dataview-content { border:0; border-radius:0; box-shadow:none; }
+    .case-list .case-item:last-child, .doctor-list .doctor-item:last-child { border-bottom:0; }
+    .case-item { background:var(--surface); border-bottom:1px solid var(--border); padding:14px; cursor:pointer; }
+    @media (hover:hover) and (pointer:fine) { .case-item:hover { background:#FAFBFC; } }
+    .case-item:active { background:var(--bg); }
+    .case-item:focus-visible { outline:2px solid var(--brand-700); outline-offset:-2px; }
+    .ci-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:7px; gap:8px; }
+    .ci-identity { display:flex; flex:1; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 6px; }
+    .ci-name { font-size:var(--fs-14); font-weight:500; overflow-wrap:anywhere; }
+    .case-id { font-size:var(--fs-12); color:var(--text-muted); white-space:nowrap; }
+    .ci-status { flex-shrink:0; white-space:nowrap; }
+    .ci-meta { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:var(--fs-12); color:var(--text-muted); margin-bottom:8px; }
+    .ci-meta > span { min-width:0; overflow-wrap:anywhere; }
+    .ci-cancer { color:var(--text-secondary); }
+    .prog-wrap { display:flex; align-items:center; gap:8px; }
+    .case-progress { flex:1; }
+    .prog-text { font-size:var(--fs-12); color:var(--text-muted); white-space:nowrap; }
+    .detail-body { padding:24px 0; }
+    .detail-panel.p-panel { margin-bottom:24px; border:0; border-radius:0; box-shadow:none; }
+    .detail-panel:last-child { margin-bottom:0; }
+    .detail-panel .p-panel-header { padding:0 16px 4px; border:0; }
+    .detail-panel .p-panel-content-container, .detail-panel .p-panel-content { border:0; }
+    .section-title { font-size:var(--fs-16); font-weight:600; line-height:1.4; color:var(--text-primary); }
+    .info-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:8px 16px; font-size:var(--fs-14); }
+    .info-label { color:var(--text-muted); flex-shrink:0; }
+    .info-value { font-weight:500; text-align:right; max-width:65%; overflow-wrap:anywhere; }
+    .info-value-small { font-size:var(--fs-12); }
+    .case-timeline.p-timeline { padding:8px 16px 0; }
+    .case-progress-panel .case-timeline .p-timeline-event { min-height:72px; }
+    .case-timeline .p-timeline-event-opposite { display:none; }
+    .case-progress-panel .case-timeline .p-timeline-event-content { padding:0 0 24px 14px; min-width:0; }
+    .case-progress-panel .case-timeline .p-timeline-event:last-child { min-height:28px; }
+    .case-progress-panel .case-timeline .p-timeline-event:last-child .p-timeline-event-content { padding-bottom:0; }
+    .node-content { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+    .node-info { flex:1; min-width:0; }
+    .node-label { font-size:var(--fs-14); font-weight:500; line-height:1.6; }
+    .node-date { font-size:var(--fs-12); color:var(--text-secondary); line-height:1.6; margin-top:4px; }
+    .case-timeline .p-tag { font-size:var(--fs-12); padding:2px 8px; flex-shrink:0; white-space:nowrap; }
+    .file-item { display:flex; align-items:center; gap:10px; padding:8px 16px; }
+    .file-download.p-button { color:var(--brand-700); border:1px solid var(--brand-400); background:var(--surface); }
+    .file-download.p-button:enabled:hover { color:var(--brand-700); border-color:var(--brand-700); background:var(--brand-50); }
+    .file-download.p-button:enabled:active { background:var(--brand-200); }
+    .file-info, .doctor-info { flex:1; min-width:0; }
+    .file-name { font-size:var(--fs-14); font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .file-meta { font-size:var(--fs-12); color:var(--text-muted); margin-top:1px; }
+    .empty-state { padding:24px 16px; text-align:center; color:var(--text-muted); font-size:var(--fs-14); }
+    .area-note { padding:0 14px 10px; background:var(--surface); font-size:var(--fs-12); color:var(--text-muted); }
+    .area-note strong { color:var(--brand-700); }
+    .doctor-membership { display:flex; flex-shrink:0; align-items:center; gap:8px; font-size:var(--fs-12); color:var(--text-muted); cursor:pointer; }
+    .doctor-item { display:flex; align-items:center; gap:11px; padding:13px 14px; background:var(--surface); border-bottom:1px solid var(--border); }
+    .doctor-name { font-size:var(--fs-14); font-weight:600; }
+    .doctor-sub { font-size:var(--fs-12); color:var(--text-muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .p-button { white-space:nowrap; font-size:var(--fs-14); }
+    .p-button.p-button-sm { font-size:var(--p-button-sm-font-size, 12px); }
+    /* Keep compact mobile actions easy to tap. */
+    .doctor-item > .p-button, .file-item > .p-button { flex-shrink:0; }
+    .client-toast .p-toast-summary { overflow-wrap:anywhere; }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!-- Temporary Demo controls overlay the page without changing application layout. -->
+  <button type="button" class="demo-toggle" :aria-expanded="demoNavOpen" aria-controls="demo-navigation" @click="demoNavOpen = !demoNavOpen" @keydown.esc="demoNavOpen = false">
+    <i :class="demoNavOpen ? 'pi pi-times' : 'pi pi-bars'" aria-hidden="true"></i>Demo
+  </button>
+  <div v-if="demoNavOpen" class="demo-backdrop" aria-hidden="true" @click="demoNavOpen = false"></div>
+  <nav id="demo-navigation" class="nav-bar" :class="{ 'is-open':demoNavOpen }" aria-label="Demo 畫面切換" @keydown.esc="closeDemoNav">
+    <div class="demo-nav-title">Demo 畫面切換</div>
+    <p-button label="登入" size="small" :dt="demoButtonTheme(activeScene === 'login')" :aria-pressed="activeScene === 'login'" @click="jumpTo('login')"></p-button>
+    <div v-for="group in sceneGroups" :key="group.role" class="nav-group">
+      <span class="nav-sep">{{ group.label }}</span>
+      <p-button v-for="scene in group.scenes" :key="scene.key" :label="scene.label" size="small" :dt="demoButtonTheme(activeScene === scene.key)" :aria-pressed="activeScene === scene.key" @click="jumpTo(scene.key)"></p-button>
+    </div>
+  </nav>
+
+  <main class="client-app">
+    <section v-if="currentScreen === 'login'" class="screen" aria-label="登入">
+      <div class="login-body">
+        <p-card class="login-card" :dt="loginCardTheme">
+          <template #title>
+            <div class="login-logo">
+              <img class="login-logo-image" src="https://www.tshbiopharm.com/rwd1427/Store/OwnImage/logo.png" alt="東生華製藥 tshbiopharm">
+            </div>
+            <h2 class="login-title">個案查詢系統</h2>
+          </template>
+          <template #content>
+            <form @submit.prevent="login">
+              <div class="form-group">
+                <label class="form-label" for="login-account">帳號</label>
+                <p-input-text id="login-account" v-model="loginAccount" autocomplete="username" fluid></p-input-text>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="login-email">Email（登入驗證用）</label>
+                <p-input-text id="login-email" v-model="loginEmail" readonly :dt="readonlyInputTheme" fluid></p-input-text>
+                <p class="form-hint"><i class="pi pi-lock" aria-hidden="true"></i>Email 由管理員設定，無法自行更改</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="login-otp">Email 驗證碼</label>
+                <div class="otp-row">
+                  <p-input-text id="login-otp" v-model="loginOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 位數驗證碼"></p-input-text>
+                  <p-button type="button" link :disabled="otpCountdown > 0" @click="sendOTP">{{ otpButtonLabel }}</p-button>
+                </div>
+              </div>
+              <p-button type="submit" label="登入" fluid class="login-submit"></p-button>
+            </form>
+          </template>
+        </p-card>
+      </div>
+    </section>
+
+    <section v-else-if="currentScreen === 'cases'" class="screen" aria-label="個案列表">
+      <header class="topbar">
+        <div class="topbar-row">
+          <nav v-if="currentRole === 'sales'" class="topbar-switch" aria-label="業務頁面切換">
+            <button type="button" class="topbar-title" aria-current="page" @click="goTo('cases')">我的個案</button>
+            <span class="topbar-switch-separator" aria-hidden="true">/</span>
+            <button type="button" class="topbar-title" @click="openMyDoctors">我的醫師</button>
+          </nav>
+          <h1 v-else class="topbar-title">我的個案</h1>
+          <div class="topbar-actions">
+            <div class="topbar-account"><span class="topbar-account-name">{{ roleProfile.name }}・{{ roleProfile.label }}</span></div>
+          </div>
+        </div>
+      </header>
+      <div class="screen-body">
+        <div class="search-bar case-search">
+          <div class="case-search-field">
+            <p-icon-field><p-input-icon class="pi pi-search"></p-input-icon><p-input-text ref="caseSearchInput" v-model="caseQuery" aria-label="搜尋個案" placeholder="搜尋個案姓名、個案編號…" fluid></p-input-text></p-icon-field>
+            <button v-if="caseQuery.length" type="button" class="case-search-clear" aria-label="清除搜尋" @click="clearCaseSearch"><i class="pi pi-times" aria-hidden="true"></i></button>
+          </div>
+        </div>
+        <p-data-view :value="filteredCases" data-key="id" class="case-list">
+          <template #empty><p class="empty-state">找不到符合的個案</p></template>
+          <template #list="{ items }">
+            <article v-for="c in items" :key="c.id" class="case-item" role="button" tabindex="0" :aria-label="'查看個案 ' + c.name + ' ' + c.id" @click="openCase(c)" @keydown.enter.prevent="openCase(c)" @keydown.space.prevent="openCase(c)">
+              <div class="ci-top">
+                <div class="ci-identity"><div class="ci-name">{{ c.name }}</div><span class="case-id">{{ c.id }}</span></div>
+                <p-tag :value="statusLabel(c.status)" :severity="statusSeverity(c.status)" :dt="caseStatusTheme" class="ci-status" rounded></p-tag>
+              </div>
+              <div class="ci-meta"><span class="ci-cancer">{{ c.cancer }}</span><span>{{ c.hospital }}</span></div>
+              <div class="prog-wrap">
+                <p-progress-bar :value="caseStep(c) / 5 * 100" :show-value="false" :dt="progressTheme(c)" class="case-progress"></p-progress-bar>
+                <span class="prog-text">N{{ caseStep(c) }}/5</span>
+              </div>
+            </article>
+          </template>
+        </p-data-view>
+      </div>
+    </section>
+
+    <section v-else-if="currentScreen === 'detail' && selectedCase" class="screen" aria-label="個案詳情">
+      <header class="topbar">
+        <div class="topbar-row">
+          <div class="topbar-leading">
+            <p-button icon="pi pi-arrow-left" text :dt="headerBackTheme" class="topbar-back" aria-label="返回個案列表" @click="goBack('cases')"></p-button>
+            <div class="topbar-title-row"><h1 class="topbar-title">{{ selectedCase.name }}</h1><p-tag :value="statusLabel(selectedCase.status)" :severity="statusSeverity(selectedCase.status)" rounded></p-tag></div>
+          </div>
+        </div>
+      </header>
+      <div class="screen-body detail-body">
+        <p-panel class="detail-panel">
+          <template #header><h2 class="section-title">基本資訊</h2></template>
+          <div v-for="field in caseInfo" :key="field.label" class="info-row">
+            <span class="info-label">{{ field.label }}</span><span class="info-value">{{ field.value }}</span>
+          </div>
+          <div class="info-row"><span class="info-label">直客</span><span class="info-value"><p-tag v-if="selectedCase.isDirect" value="直客" icon="pi pi-check" severity="info" rounded></p-tag><span v-else>否</span></span></div>
+          <div class="info-row"><span class="info-label">個案編號</span><span class="info-value info-value-small">{{ selectedCase.id }}</span></div>
+          <div class="info-row"><span class="info-label">建立日期</span><span class="info-value info-value-small">{{ selectedCase.createdAt }}</span></div>
+        </p-panel>
+        <p-panel class="detail-panel case-progress-panel">
+          <template #header><h2 class="section-title">個案進程</h2></template>
+          <p-timeline :value="caseNodes" class="case-timeline">
+            <template #marker="{ item }"><p-avatar shape="circle" :label="item.state === 'done' ? undefined : String(item.n)" :icon="item.state === 'done' ? 'pi pi-check' : undefined" :dt="nodeAvatarTheme(item.state)"></p-avatar></template>
+            <template #content="{ item }">
+              <div class="node-content"><div class="node-info"><div class="node-label">{{ item.label }}</div><div v-if="item.date" class="node-date">{{ item.date }}</div></div><p-tag :value="item.statusLabel" :severity="item.severity" rounded></p-tag></div>
+            </template>
+          </p-timeline>
+        </p-panel>
+        <p-panel class="detail-panel">
+          <template #header><h2 class="section-title">報告檔案</h2></template>
+          <p v-if="!selectedCase.files.length" class="empty-state">尚無報告檔案</p>
+          <div v-for="f in selectedCase.files" :key="f.name" class="file-item">
+            <p-avatar :label="f.type.toUpperCase()" :dt="fileAvatarTheme(f.type)"></p-avatar>
+            <div class="file-info"><div class="file-name">{{ f.name }}</div><div class="file-meta">{{ f.size }} · {{ f.date }}</div></div>
+            <p-button label="下載" size="small" severity="info" outlined class="file-download" :aria-label="'下載 ' + f.name" @click="downloadFile(f.name)"></p-button>
+          </div>
+        </p-panel>
+      </div>
+    </section>
+
+    <section v-else-if="currentScreen === 'doctors'" class="screen" aria-label="我的醫師">
+      <header class="topbar">
+        <div class="topbar-row">
+          <nav class="topbar-switch" aria-label="業務頁面切換">
+            <button type="button" class="topbar-title" @click="goTo('cases')">我的個案</button>
+            <span class="topbar-switch-separator" aria-hidden="true">/</span>
+            <button type="button" class="topbar-title" aria-current="page" @click="openMyDoctors">我的醫師</button>
+          </nav>
+          <div class="topbar-actions">
+            <div class="topbar-account"><span class="topbar-account-name">{{ roleProfile.name }}・{{ roleProfile.label }}</span></div>
+          </div>
+        </div>
+      </header>
+      <div class="screen-body">
+        <div class="search-bar case-search"><p-icon-field><p-input-icon class="pi pi-search"></p-input-icon><p-input-text v-model="doctorQuery" aria-label="搜尋醫師" placeholder="搜尋醫師姓名、醫院…" fluid></p-input-text></p-icon-field></div>
+        <p class="area-note">可加入醫師範圍：<strong>台北院區</strong>（由管理員設定轄區）</p>
+        <p-data-view :value="filteredDoctors" data-key="id" class="doctor-list">
+          <template #empty><p class="empty-state">找不到符合的醫師</p></template>
+          <template #list="{ items }">
+            <div v-for="d in items" :key="d.id" class="doctor-item"><p-avatar :label="d.name[0]" shape="circle" :dt="doctorAvatarTheme"></p-avatar><div class="doctor-info"><div class="doctor-name">{{ d.name }} 醫師</div><div class="doctor-sub">{{ d.hospital }}</div></div><label class="doctor-membership" :for="'doctor-membership-' + d.id"><span>{{ hasDoctor(d.id) ? '已加入' : '未加入' }}</span><p-toggle-switch :dt="toggleSmallTheme" :input-id="'doctor-membership-' + d.id" :model-value="hasDoctor(d.id)" :aria-label="d.name + ' 醫師，加入我的醫師'" @update:model-value="setDoctorMembership(d.id, $event)"></p-toggle-switch></label></div>
+          </template>
+        </p-data-view>
+      </div>
+    </section>
+
+  </main>
+  <p-toast group="client" position="top-center" class="client-toast" :style="{ width:'min(448px, calc(100% - 32px))', top:'max(16px, env(safe-area-inset-top))' }"></p-toast>
+</div>
+<script src="https://scrm.oakmega.site/0/js/vue3.prod.js"></script>
+<script src="https://scrm.oakmega.site/0/js/primevue.min.js"></script>
+<script src="https://scrm.oakmega.site/0/js/axios.min.js"></script>
+<script src="https://scrm.oakmega.site/0/js/lara.js"></script>
+<script>
+const NODE_DEFS = [
+  { n:1, key:'n1', label:'N1 · 檢體從台灣寄出' },
+  { n:2, key:'n2', label:'N2 · 實驗室收件' },
+  { n:3, key:'n3', label:'N3 · 預估報告完成日' },
+  { n:4, key:'n4', label:'N4 · 電子檔報告產出' },
+  { n:5, key:'n5', label:'N5 · 紙本報告寄出' },
+];
+
+const CASES = [
+  { id:'TSH-2026-0042', name:'周○○', cancer:'肺癌',   hospital:'台大醫院', doctorId:'D001', doctor:'林大明', salesId:'S001', sales:'陳小明', isDirect:true,
+    progress:{ n1:'2026-05-01', n2:'2026-05-05', n3:'2026-05-20', n4:'', n5:'' },
+    files:[{ name:'基因報告_2026-05.pdf', type:'pdf', size:'2.3 MB', date:'2026-05-20' }],
+    createdAt:'2026-05-01', status:'active' },
+  { id:'TSH-2026-0040', name:'李○○', cancer:'大腸癌', hospital:'台大醫院', doctorId:'D001', doctor:'林大明', salesId:'S001', sales:'陳小明', isDirect:false,
+    progress:{ n1:'2026-04-15', n2:'2026-04-20', n3:'', n4:'', n5:'' },
+    files:[],
+    createdAt:'2026-04-15', status:'overdue' },
+  { id:'TSH-2026-0035', name:'吳○○', cancer:'淋巴瘤', hospital:'台大醫院', doctorId:'D001', doctor:'林大明', salesId:'S001', sales:'陳小明', isDirect:false,
+    progress:{ n1:'2026-03-10', n2:'2026-03-14', n3:'2026-03-25', n4:'2026-04-02', n5:'2026-04-08' },
+    files:[
+      { name:'NGS報告_吳○○.pdf', type:'pdf', size:'2.9 MB', date:'2026-04-02' },
+      { name:'附件說明.txt', type:'txt', size:'12 KB', date:'2026-04-02' },
+    ],
+    createdAt:'2026-03-10', status:'done' },
+];
+
+// Sales manages these doctors
+const MY_DOCTORS = [
+  { id:'D001', name:'林大明', hospital:'台大醫院腫瘤科' },
+  { id:'D002', name:'陳雅婷', hospital:'台北榮總放射科' },
+];
+// All doctors within 轄區 (set by admin)
+const ALL_AREA_DOCTORS = [
+  { id:'D001', name:'林大明', hospital:'台大醫院腫瘤科' },
+  { id:'D002', name:'陳雅婷', hospital:'台北榮總放射科' },
+  { id:'D005', name:'鄭明哲', hospital:'台北市立聯合醫院腫瘤科' },
+  { id:'D006', name:'黃淑芬', hospital:'台灣大學附設醫院一般外科' },
+];
+
+
+// Scoped tokens keep controls readable on the dark demo bar and page headers.
+const headerButtonTheme = {
+  root:{ primary:{
+    background:'rgba(255,255,255,.15)', hoverBackground:'rgba(255,255,255,.23)', activeBackground:'rgba(255,255,255,.3)',
+    color:'#fff', hoverColor:'#fff', activeColor:'#fff', borderColor:'transparent', hoverBorderColor:'transparent', activeBorderColor:'transparent',
+  } },
+};
+const headerBackTheme = {
+  text:{ primary:{ color:'#1A2530', hoverColor:'#1A2530', activeColor:'#1A2530', hoverBackground:'#F4F6F8', activeBackground:'#EEF2F5' } },
+};
+const roleProfiles = {
+  doctor:{ label:'醫師', name:'林大明' },
+  assistant:{ label:'助理', name:'張小惠' },
+  window:{ label:'院所窗口', name:'李美玲' },
+  sales:{ label:'業務', name:'陳小明' },
+  admin:{ label:'管理員', name:'王崇霖' },
+};
+const { ref, computed, nextTick, onBeforeUnmount } = Vue;
+const app = Vue.createApp({
+  setup() {
+    const toast = PrimeVue.useToast();
+
+    // 固定設定
+    const nodeDefs = NODE_DEFS;
+    const areaDoctors = ALL_AREA_DOCTORS;
+    const loginCardTheme = { root:{ borderRadius:'16px', shadow:'0 4px 24px rgba(0,0,0,.08)' }, body:{ padding:'var(--login-card-padding)', gap:'20px' }, title:{ fontSize:'20px', fontWeight:'600' } };
+    const readonlyInputTheme = { root:{ background:'#EEF2F5', color:'#7A8F9E' } };
+    const caseStatusTheme = { root:{ fontSize:'12px', padding:'2px 8px' } };
+    // ToggleSwitch 沒有 size 屬性，以 tokens 縮成小尺寸
+    const toggleSmallTheme = { root:{ width:'2rem', height:'1.125rem', gap:'0.125rem' }, handle:{ size:'0.875rem' } };
+    const doctorAvatarTheme = { root:{ width:'40px', height:'40px', background:'#EEF2F5', color:'#4A5C6A', fontSize:'14px' } };
+    const sceneGroups = [
+      { role:'doctor', label:'醫師', scenes:[{ key:'doctor-list', label:'個案列表' },{ key:'doctor-detail', label:'個案細節' }] },
+      { role:'assistant', label:'助理', scenes:[{ key:'assist-list', label:'個案列表' },{ key:'assist-detail', label:'個案細節' }] },
+      { role:'window', label:'院所窗口', scenes:[{ key:'window-list', label:'個案列表' },{ key:'window-detail', label:'個案細節' }] },
+      { role:'sales', label:'業務', scenes:[{ key:'sales-list', label:'個案列表' },{ key:'sales-detail', label:'個案細節' },{ key:'sales-doctors', label:'醫師管理' }] },
+      { role:'admin', label:'管理員', scenes:[{ key:'admin-list', label:'個案列表' },{ key:'admin-detail', label:'個案細節' }] },
+    ];
+
+    function demoButtonTheme(active) {
+      const background = active ? '#47CCC8' : 'transparent';
+      return { root:{ borderRadius:'6px', sm:{ fontSize:'12px', paddingX:'10px', paddingY:'5px' }, primary:{
+        background, hoverBackground:active ? '#3BBDB9' : '#EAF8F7', activeBackground:'#2FB5B0',
+        color:active ? '#fff' : '#4A5C6A', hoverColor:active ? '#fff' : '#0A6E6B', activeColor:'#fff',
+        borderColor:'transparent', hoverBorderColor:'transparent', activeBorderColor:'transparent',
+      } } };
+    }
+
+    // 登入與驗證碼
+    const loginAccount = ref('sales001');
+    const loginEmail = ref('chen@tsh.com');
+    const loginOtp = ref('');
+    const otpCountdown = ref(0);
+    let otpTimer = null;
+    const otpButtonLabel = computed(() => otpCountdown.value > 0 ? `重新發送(${otpCountdown.value}s)` : '發送驗證碼');
+
+    function login() { currentRole.value = 'sales'; caseQuery.value = ''; goTo('cases'); }
+    function clearOtpTimer() { if (otpTimer !== null) clearInterval(otpTimer); otpTimer = null; }
+    function sendOTP() {
+      if (otpCountdown.value > 0) return;
+      clearOtpTimer();
+      loginOtp.value = '246810';
+      otpCountdown.value = 30;
+      otpTimer = setInterval(() => {
+        otpCountdown.value--;
+        if (otpCountdown.value <= 0) clearOtpTimer();
+      }, 1000);
+    }
+
+    // 頁面導覽與角色
+    const demoNavOpen = ref(false);
+    function closeDemoNav() {
+      demoNavOpen.value = false;
+      nextTick(() => {
+        const toggle = document.querySelector('.demo-toggle');
+        if (toggle?.getClientRects().length) toggle.focus();
+      });
+    }
+    const currentScreen = ref('login');
+    const currentRole = ref('sales');
+    const historyStack = ref([]);
+    const roleProfile = computed(() => roleProfiles[currentRole.value]);
+    const activeScene = computed(() => {
+      if (currentScreen.value === 'login') return 'login';
+      if (currentScreen.value === 'doctors') return 'sales-doctors';
+      const role = currentRole.value === 'assistant' ? 'assist' : currentRole.value;
+      return role + (currentScreen.value === 'detail' ? '-detail' : '-list');
+    });
+
+    function jumpTo(scene) {
+      closeDemoNav();
+      historyStack.value = [];
+      caseQuery.value = '';
+      doctorQuery.value = '';
+      if (scene === 'login') currentScreen.value = 'login';
+      else {
+        const [role, page] = scene.split('-');
+        currentRole.value = role === 'assist' ? 'assistant' : role;
+        currentScreen.value = page === 'detail' ? 'detail' : page === 'doctors' ? 'doctors' : 'cases';
+        if (currentScreen.value === 'detail') selectedCase.value = cases.value[0];
+      }
+      scrollToTop();
+    }
+    function goTo(screen) {
+      if (currentScreen.value === screen) return;
+      historyStack.value.push({ screen:currentScreen.value, scrollY:window.scrollY });
+      currentScreen.value = screen;
+      scrollToTop();
+    }
+    function goBack(fallback) {
+      const previous = historyStack.value.pop();
+      currentScreen.value = previous?.screen || fallback;
+      nextTick(() => window.scrollTo({ top:previous?.scrollY || 0, behavior:'instant' }));
+    }
+    function scrollToTop() { nextTick(() => window.scrollTo({ top:0, behavior:'instant' })); }
+
+    // 個案列表與詳情
+    const cases = ref(CASES);
+    const selectedCase = ref(null);
+    const caseQuery = ref('');
+    const caseSearchInput = ref(null);
+    function clearCaseSearch() {
+      caseQuery.value = '';
+      nextTick(() => caseSearchInput.value?.$el?.focus());
+    }
+    const filteredCases = computed(() => {
+      const query = caseQuery.value.trim().toLowerCase();
+      return cases.value.filter(c => !query || [c.name,c.id].some(value => value.toLowerCase().includes(query)));
+    });
+    const caseInfo = computed(() => {
+      if (!selectedCase.value) return [];
+      return [
+        { label:'個案姓名', value:selectedCase.value.name }, { label:'癌症類型', value:selectedCase.value.cancer },
+        { label:'醫院', value:selectedCase.value.hospital }, { label:'主治醫師', value:selectedCase.value.doctor },
+        { label:'負責業務', value:selectedCase.value.sales },
+      ];
+    });
+    const caseNodes = computed(() => {
+      if (!selectedCase.value) return [];
+      const lastDone = caseStep(selectedCase.value);
+      return nodeDefs.map(node => {
+        const date = selectedCase.value.progress[node.key];
+        const state = date ? 'done' : node.n === lastDone + 1 ? 'active' : 'pending';
+        return { ...node, date, state, statusLabel:{ done:'已完成', active:'進行中', pending:'待填寫' }[state], severity:{ done:'success', active:'info', pending:'secondary' }[state] };
+      });
+    });
+
+    function openCase(c) { selectedCase.value = c; goTo('detail'); }
+    function caseStep(c) { for (let n = 5; n >= 1; n--) if (c.progress['n' + n]) return n; return 0; }
+    function statusLabel(status) { return { active:'進行中', overdue:'逾期', done:'已完成', terminated:'已中止' }[status] || status; }
+    function statusSeverity(status) { return { active:'info', overdue:'warn', done:'success', terminated:'danger' }[status] || 'secondary'; }
+    function statusColor(status) { return { active:'var(--status-active)', overdue:'var(--status-overdue)', done:'var(--status-done)', terminated:'var(--status-terminated)' }[status] || 'var(--border)'; }
+    function progressTheme(c) { return { value:{ background:statusColor(c.status) } }; }
+    function nodeAvatarTheme(state) {
+      return { root:{ width:'28px', height:'28px', fontSize:'12px', background:{ done:'#3BAA6A', active:'#47CCC8', pending:'#EEF2F5' }[state], color:{ done:'#fff', active:'#fff', pending:'#7A8F9E' }[state] }, icon:{ size:'12px' } };
+    }
+    function fileAvatarTheme(type) {
+      const colors = { pdf:['#FCECEA','#B93028'], txt:['#EEF2F5','#4A5C6A'], docx:['#dbeafe','#1d4ed8'] }[type] || ['#EEF2F5','#4A5C6A'];
+      return { root:{ width:'34px', height:'34px', borderRadius:'8px', fontSize:'12px', background:colors[0], color:colors[1] } };
+    }
+
+    // 醫師管理
+    const myDoctors = ref(MY_DOCTORS);
+    const doctorQuery = ref('');
+    const filteredDoctors = computed(() => {
+      const query = doctorQuery.value.trim().toLowerCase();
+      return areaDoctors.filter(d => !query || [d.name,d.hospital].some(value => value.toLowerCase().includes(query)));
+    });
+
+    function openMyDoctors() { goTo('doctors'); }
+    function setDoctorMembership(id, joined) {
+      if (joined === hasDoctor(id)) return;
+      if (joined) addDoctor(id);
+      else removeDoctor(id);
+    }
+    function hasDoctor(id) { return myDoctors.value.some(d => d.id === id); }
+    function removeDoctor(id) { myDoctors.value = myDoctors.value.filter(d => d.id !== id); showToast('已移除醫師'); }
+    function addDoctor(id) {
+      const doctor = areaDoctors.find(d => d.id === id);
+      if (!doctor || hasDoctor(id)) return;
+      myDoctors.value.push(doctor);
+      showToast('醫師已加入名下');
+    }
+
+    // 檔案通知
+    function downloadFile(name) { showToast(`下載中：${name}`); }
+    function showToast(summary) {
+      toast.removeGroup('client');
+      toast.add({ group:'client', severity:'success', summary, life:2200 });
+    }
+
+    onBeforeUnmount(clearOtpTimer);
+
+    return {
+      // 固定設定
+      headerButtonTheme,
+      headerBackTheme,
+      loginCardTheme,
+      readonlyInputTheme,
+      caseStatusTheme,
+      doctorAvatarTheme,
+      toggleSmallTheme,
+      sceneGroups,
+      demoButtonTheme,
+      // 登入與驗證碼
+      loginAccount,
+      loginEmail,
+      loginOtp,
+      otpCountdown,
+      otpButtonLabel,
+      login,
+      sendOTP,
+      // 頁面導覽與角色
+      demoNavOpen,
+      closeDemoNav,
+      currentScreen,
+      currentRole,
+      roleProfile,
+      activeScene,
+      jumpTo,
+      goTo,
+      goBack,
+      // 個案列表與詳情
+      cases,
+      selectedCase,
+      caseQuery,
+      caseSearchInput,
+      clearCaseSearch,
+      filteredCases,
+      caseInfo,
+      caseNodes,
+      openCase,
+      caseStep,
+      statusLabel,
+      statusSeverity,
+      progressTheme,
+      nodeAvatarTheme,
+      fileAvatarTheme,
+      // 醫師管理
+      myDoctors,
+      doctorQuery,
+      filteredDoctors,
+      openMyDoctors,
+      setDoctorMembership,
+      hasDoctor,
+      removeDoctor,
+      addDoctor,
+      // 檔案通知
+      downloadFile,
+    };
+  },
+});
+
+// Retain Lara defaults while keeping the existing brand and compact mobile UI.
+function mergePreset(base, overrides) {
+  const result = { ...base };
+  Object.entries(overrides).forEach(([key,value]) => {
+    result[key] = value && typeof value === 'object' && !Array.isArray(value)
+      ? mergePreset(base?.[key] || {}, value) : value;
+  });
+  return result;
+}
+// 東生華品牌色階，Lara 的 info（blue / sky）元件一併改用品牌青綠。
+const brandPalette = { 50:'#EAF8F7', 100:'#D2F1F0', 200:'#A6E3E1', 300:'#75D3D0', 400:'#47CCC8', 500:'#1FA9A5', 600:'#0A7672', 700:'#0A6E6B', 800:'#0B5856', 900:'#0B4847', 950:'#063331' };
+const successPalette = { 50:'#EEF7F1', 100:'#D6EDDD', 200:'#ADDABB', 300:'#7DC294', 400:'#52B27A', 500:'#3BAA6A', 600:'#2F7D46', 700:'#276B3C', 800:'#225332', 900:'#1C4429', 950:'#0E2616' };
+// 警告用亮橘：500 為色條，600 以上為文字。
+const warnPalette = { 50:'#FFF4E5', 100:'#FFE7C2', 200:'#FDD08A', 300:'#FBB74F', 400:'#F8A82A', 500:'#F59E0B', 600:'#B45309', 700:'#92400E', 800:'#78350F', 900:'#5C2A0C', 950:'#3B1A05' };
+// 中性色沿用既有的藍灰色票，Dialog、Toast、Select 等元件共用。
+const surfacePalette = { 0:'#ffffff', 50:'#F4F6F8', 100:'#EEF2F5', 200:'#DDE3E9', 300:'#B8C4CE', 400:'#93A4B1', 500:'#7A8F9E', 600:'#4A5C6A', 700:'#36454F', 800:'#26323B', 900:'#1A2530', 950:'#0F171E' };
+const theme = mergePreset(PrimeUIX.Themes.Lara, {
+  primitive:{ blue:brandPalette, sky:brandPalette, green:successPalette, yellow:warnPalette, orange:warnPalette },
+  semantic:{
+    surface:surfacePalette,
+    typography:{ fontFamily:"'Noto Sans TC', sans-serif", fontSize:'14px' },
+    primary:{ ...brandPalette, color:'#47CCC8', contrastColor:'#ffffff', hoverColor:'#3BBDB9', activeColor:'#2FB5B0' },
+    text:{ color:'#1A2530', hoverColor:'#0A6E6B', mutedColor:'#7A8F9E', hoverMutedColor:'#4A5C6A' },
+    content:{ background:'#fff', hoverBackground:'#F4F6F8', color:'#1A2530', borderColor:'#DDE3E9' },
+    formField:{ fontSize:'16px', paddingX:'12px', paddingY:'10px', borderRadius:'8px', borderColor:'#DDE3E9', hoverBorderColor:'#1FA9A5', focusBorderColor:'#1FA9A5' },
+  },
+  components:{
+    button:{ text:{ primary:{ color:'#0A6E6B' } }, link:{ color:'#0A6E6B', hoverColor:'#0B5856', activeColor:'#0B5856' }, root:{ borderRadius:'8px', paddingX:'16px', paddingY:'8px', gap:'6px', label:{ fontWeight:'600' }, sm:{ fontSize:'12px', paddingX:'12px', paddingY:'6px' } }, outlined:{
+      primary:{ color:'#0A6E6B', borderColor:'#47CCC8' },
+      secondary:{ color:'#4A5C6A', borderColor:'#DDE3E9', hoverBackground:'#EEF2F5' },
+      danger:{ color:'#B93028', borderColor:'#f0c0bb', hoverBackground:'#FCECEA' },
+      warn:{ color:'#B45309', borderColor:'#FDD08A', hoverBackground:'#FFF4E5' },
+    } },
+    tag:{ root:{ fontSize:'12px', fontWeight:'600', padding:'3px 8px', roundedBorderRadius:'999px' }, primary:{ background:'#E3F6F5', color:'#0A6E6B' }, info:{ background:'#E3F6F5', color:'#0A6E6B' }, success:{ background:'#E6F3EA', color:'#276B3C' }, warn:{ background:'#FFF4E5', color:'#B45309' }, danger:{ background:'#FCECEA', color:'#B93028' }, secondary:{ background:'#EEF2F5', color:'#4A5C6A' } },
+    card:{ root:{ borderRadius:'12px' } },
+    panel:{ root:{ borderRadius:'0', borderColor:'transparent' }, header:{ background:'#fff', padding:'11px 16px 9px', borderRadius:'0', borderColor:'#DDE3E9' }, content:{ padding:'0' } },
+    progressbar:{ root:{ height:'6px', borderRadius:'3px', background:'#DDE3E9' } },
+    dialog:{ title:{ fontSize:'16px' } },
+    dataview:{ content:{ background:'transparent' } },
+  },
+});
+app.use(PrimeVue.Config, { theme:{ preset:theme, options:{ darkModeSelector:false } } }).use(PrimeVue.ToastService);
+const components = {
+  'p-button':'Button', 'p-input-text':'InputText', 'p-icon-field':'IconField', 'p-input-icon':'InputIcon',
+  'p-toggle-switch':'ToggleSwitch',
+  'p-tag':'Tag', 'p-card':'Card', 'p-panel':'Panel', 'p-data-view':'DataView',
+  'p-progress-bar':'ProgressBar', 'p-timeline':'Timeline', 'p-avatar':'Avatar', 'p-toast':'Toast',
+};
+Object.entries(components).forEach(([name, component]) => app.component(name, PrimeVue[component]));
+app.mount('#app');
+</script>
+</body>
+</html>
